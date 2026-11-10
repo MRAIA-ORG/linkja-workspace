@@ -4,7 +4,7 @@ The new hash file module in linkja-core takes over the write and read code from 
 
 Sites may already hold v1 files. Sites on old and new versions must be able to join one project.
 
-A test must prove the bytes do not change. Several inputs change from run to run or from build to build (the session key, the RSA padding, the library secret and the row order), so the test design lives in ticket MRAIA-ORG/linkja-workspace#14.
+A test must prove the bytes do not change. Several inputs change from run to run or from build to build: the session key, the RSA padding, the library secret and the row order. Ticket MRAIA-ORG/linkja-workspace#14 holds the test design.
 
 Known v1 format problems wait for a later v2:
 

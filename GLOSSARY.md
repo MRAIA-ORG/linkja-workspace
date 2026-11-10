@@ -85,7 +85,7 @@ The file a site sends to the aggregator. It holds a header, an envelope and the 
 _Avoid_: output file, encrypted file, token file
 
 **Header**:
-The first part of a hash file. It gives the format version, names the site and project, and gives the number of hash values per row and the row count.
+The first part of a hash file. It gives the format version, the site ID and the project ID, and gives the number of hash values per row and the row count.
 _Avoid_: metadata block
 
 **Envelope**:
