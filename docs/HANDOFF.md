@@ -26,7 +26,7 @@ within hours. Derive them with `gh issue list` and the scripts in the repo.
 - **Maven picks the newest JDK.** Homebrew `openjdk` is Java 27 on this Mac. Every Maven command needs `JAVA_HOME=/opt/homebrew/opt/openjdk@25`.
 - **Read `develop`, not only `master`.** The first audit read `master` only. On `develop`, the three programs already target Java 25 with current dependencies. Jonathan Carr did that work in March and April 2026. So the Java 17 decision was reversed.
 - **linkja-crypto `master` does not compile on Apple Silicon.** A prototype mismatch fails with clang `-Werror`. The bundled OpenSSL is x86_64 only. linkja-crypto PR 1 corrects both on `develop`.
-- **Reviews of documents grow their own scope.** The glossary went through 4 review rounds (2, 4, 1, 2 blocking). Round 2 rose because a fix added new terms. Two changes brought the count down. We dropped terms for code that does not run. We moved the byte-test design out of the ADR into ticket 14.
+- **Reviews of documents grow their own scope.** Written after 4 glossary rounds (2, 4, 1, 2 blocking). Superseded the same afternoon: the glossary took 7 rounds, see the last section. Round 2 rose because a fix added new terms. Two changes brought the count down. We dropped terms for code that does not run. We moved the byte-test design out of the ADR into ticket 14.
 
 ## 2026-11-10: plan agreed, first lanes built
 
@@ -40,7 +40,7 @@ within hours. Derive them with `gh issue list` and the scripts in the repo.
 - C library platforms: Windows x64, Linux x64, macOS universal.
 - CI: one Linux job per repo. It compiles linkja-crypto with a throwaway secret, then runs the tests.
 - Released jars stay in MRAIA-ORG/linkja-mvn-repo. The three program poms must point there (the old `linkja` address returns 404).
-- Hash file format v1 stays byte-identical during the redesign (ADR 0001 on branch `docs/glossary-and-adr`).
+- Hash file format v1 stays byte-identical during the redesign (ADR 0001, on `master`).
 - SQL-hashing is legacy. No work beyond its README.
 - Test secret files in linkja-test-data stay, with a warning.
 - Glossary words: "salt" and "hash value". "Token" is not used.
@@ -57,7 +57,7 @@ within hours. Derive them with `gh issue list` and the scripts in the repo.
 
 **Deliberately not done.** No branch protection yet (ticket 9 waits for every repo's CI job name). The old clone at `/Users/yw1084/code/linkja-core` was kept because the first session ran from it. `origin/linux-build` in linkja-crypto was not deleted.
 
-## 2026-11-10 (afternoon): four lanes merged
+## 2026-11-10: four lanes merged in the afternoon
 
 **What happened.** The four open branches from the morning went through review and fix loops and merged:
 - linkja-test-data PR 1: the test-secret notice. It closed ticket 3.
@@ -65,33 +65,39 @@ within hours. Derive them with `gh issue list` and the scripts in the repo.
 - linkja-workspace PR 31: the clone script, CONTRIBUTING, PR template and `.editorconfig`. It refs ticket 1.
 - linkja-crypto PR 1 into `develop`: system OpenSSL 3, current compilers and the first CI job. It refs ticket 2.
 
-The old `linux-build` branch in linkja-crypto was deleted. Its tip was `5974d36`.
+The old `linux-build` branch in linkja-crypto was deleted. Its tip was `5974d36`, which is also in the local linkja-crypto clone.
 
 **Decisions Claude made, open to the owner's overrule.**
 - Ticket 3 was reopened, then closed by the test-data PR. SQL-hashing PR 1 had closed it early.
-- The glossary hit the three-round rule (2, 4, 1, 2, 3 blocking). The change of direction: a fix only deletes or splits text, and a length check runs before each review.
+- The glossary hit the three-round rule. It took 7 rounds, see the `Rounds:` line of PR 26. The change of direction: a fix only deletes or splits text, and a length check runs before each review.
 - The setup branch passed round 2 with nits. They were fixed before merge, because some were doc errors that make a new developer fail.
 
 **Traps.**
 - Read the pipeline that calls a class before you write a claim about it. `HashingStep` has code for derived rows, but hashing turns that feature off (`PermuteStep(false)`).
 - A fix to one long sentence can change what the next sentence points back to. Two rounds were spent on that.
-- `gh pr merge` is blocked for a PR of 25 or more lines with no review on GitHub. Post the verdict as a PR comment first.
+- `gh pr merge` is blocked for a PR with 25 or more lines of code and no review. Post the verdict as a PR comment. It must contain `PASS` or `BLOCK`.
 
 **Deliberately not done.** No branch protection yet (ticket 9). The old clone at `/Users/yw1084/code/linkja-core` is still there.
 
 **Next.**
 
-**First task:** ticket 4 (linkja-core: Java 25, current dependencies, CI). Ticket 2 stays open only for the macOS universal library (ticket 28). Its PR is merged, so tickets 4 to 7 can start.
+**First task:** ticket 4 (linkja-core: Java 25, current dependencies, CI). Tickets 4 to 8 have no blockers. Their links to ticket 2 were removed on 2026-11-10, because the linkja-crypto PR they waited on is merged.
+
+Facts for ticket 4:
+- linkja-core tests fail on a clean clone. `linkja-core/lib` holds no native library, so the tests cannot load it.
+- The C library fixes are on linkja-crypto `develop` only. linkja-core CI must compile linkja-crypto from `develop`.
+- The secret build and the no-secrets build of linkja-crypto share one CMake cache. Reconfigure with `-DINCLUDE_SECRETS=OFF`, then `make`, to switch.
 
 **Then, in order:**
 1. Tickets 5, 6 and 7 (Java 25 and CI in linkja-hashing, linkja-matching, linkja-salt-engine). They can run in parallel lanes after ticket 4.
 2. Ticket 8 (Docker images).
 3. Ticket 9 (branch protection), once each repo has a CI job name.
-4. Follow-ups filed today: 23, 24, 25, 27, 28, 29, 30.
+4. Ticket 24 (README links). When it merges, close ticket 1.
+5. Follow-ups filed today: 23, 25, 27, 28, 29, 30, 32. Also 20 and 21, which have no blockers.
 
 Recount open tickets: `gh issue list -R MRAIA-ORG/linkja-workspace --state open`. See which can start: `gh api repos/MRAIA-ORG/linkja-workspace/issues/<n>/dependencies/blocked_by --jq '[.[].number]'`.
 
 **Waits on the owner.**
 - Ticket 19: whether two salt-like strings in SQL-hashing comments ever protected real data. The owner marked it not urgent.
 - Optional: overrule any decision Claude made above.
-- `Closes #N` closes nothing for PRs into `develop`, because `master` is the default branch in the code repos. Decide: make `develop` the default branch, or close tickets at release. Tickets 1 and 2 stay open until then.
+- `Closes #N` closes nothing for PRs into `develop`, because `master` is the default branch in the code repos. Decide: make `develop` the default branch, or close tickets at release. Ticket 2 also waits for a Windows build check and the macOS universal library (ticket 28).
