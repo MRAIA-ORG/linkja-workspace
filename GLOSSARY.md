@@ -21,14 +21,14 @@ The party that receives every site's hash file and runs matching. It holds the a
 _Avoid_: hub, central site, matcher
 
 **Aggregator key**:
-The RSA key pair of the aggregator. Sites use its public key to lock the session key, and only the aggregator can unlock it.
+The RSA key pair of the aggregator. Sites use its public key to lock the session key and the library signature, and only the aggregator can unlock them.
 _Avoid_: project key, site key
 
 ## Secrets
 
 **Salt**:
 A random secret text added to patient details before they are hashed, so that outsiders cannot guess the input.
-_Avoid_: token, secret, key
+_Avoid_: token, key, password
 
 **Project salt**:
 The salt shared by every site in one project.
@@ -47,15 +47,15 @@ A secret date that each site chooses and keeps. The number of days between it an
 _Avoid_: offset date, site date
 
 **Library secret**:
-A secret compiled into the secret build of the crypto library. It is added to each hash value before the hash value is written to the hash file.
+A secret compiled into one secret build of the crypto library, and added to each hash value before it is written to the hash file. Every site in a project must use the same secret build.
 _Avoid_: salt, project secret
 
 **Library signature**:
-A fingerprint of the library secret. It is written into the header so the aggregator can tell which secret build made a hash file.
+A fingerprint of the library secret, written into the envelope of each hash file. It lets the aggregator check which secret build made a hash file.
 _Avoid_: library hash, version
 
 **Public build / Secret build**:
-The two builds of the crypto library. The secret build holds a library secret and is used by sites for hashing. The public build has none and is safe to share.
+The two builds of the crypto library. The secret build holds a library secret and makes hash values at the sites, and the public build holds none and is safe to share.
 _Avoid_: test build, private build
 
 ## Hashing and files
@@ -65,42 +65,38 @@ One fixed mix of patient details that is hashed together, e.g. first name + last
 _Avoid_: token type, composite, combination
 
 **Hash value**:
-The scrambled result of one hash rule for one patient row. Each row has 11 hash value slots, one per hash rule. A slot is empty when the row lacks a detail its rule needs, e.g. an SSN.
+The scrambled result of one hash rule for one patient row. Each row has 11 slots, one per hash rule, and a slot is empty when the row lacks a detail that hash rule needs, e.g. an SSN.
 _Avoid_: token, hash column, hash
 
 **PIDHASH**:
 The hash value made from the site's own patient ID, the site ID, the private date and the private salt. It is the first of the 11 hash values.
 _Avoid_: patient token
 
-**Derived row**:
-An extra patient row that hashing makes from one input row, e.g. for a second last name, so the same person can match under each form of the name.
-_Avoid_: duplicate row, variant
-
 **Crosswalk**:
-The file each site keeps that pairs its own patient IDs with their PIDHASH values. The site needs it to apply the matching result to its own records, and it never leaves the site.
+The file each site keeps that pairs its own patient IDs with their PIDHASH values. The site needs it to apply the matching result to its own records, and it must never leave the site.
 _Avoid_: mapping file, lookup
 
+**Invalid data file**:
+The file each site keeps that lists the input rows hashing rejected, with their patient details in plain text. It must never leave the site.
+_Avoid_: error file, reject file
+
 **Hash file**:
-The file a site sends to the aggregator. It holds a header and the locked hash values of every patient row.
+The file a site sends to the aggregator. It holds a header, an envelope and the hidden hash values of every patient row, in that order.
 _Avoid_: output file, encrypted file, token file
 
 **Header**:
-The first part of a hash file. It names the site and project, gives the number of hash values per row and the row count, and ends with the envelope.
+The first part of a hash file. It names the site and project, and gives the number of hash values per row and the row count.
 _Avoid_: metadata block
 
 **Envelope**:
-The last part of the header. It holds the session key and the library signature, each locked with the aggregator key.
+The part of a hash file right after the header. It holds the session key and the library signature, each locked with the aggregator key.
 _Avoid_: key block, wrapper
 
 **Session key**:
-A random key made for one hash file. It locks the hash values in that file.
+A random key made for one hash file. It hides the hash values in that file, so only a holder of the session key can recover them.
 _Avoid_: AES key, file key
 
 ## Matching
-
-**Exclusion**:
-A patient row that matching sets aside because the hash values its match rules need are empty.
-_Avoid_: dropped row, skipped row
 
 **Match rule**:
 A test that says two patient rows are the same person when a given set of their hash values are equal.
