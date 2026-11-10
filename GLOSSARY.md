@@ -51,7 +51,7 @@ A secret compiled into one secret build of the crypto library, and added to each
 _Avoid_: salt, project secret
 
 **Library signature**:
-A fingerprint of the library secret, written into the envelope of each hash file. No program checks it at this time.
+A fingerprint of the library secret, written into the envelope of each hash file. linkja-matching reads it but does not compare it.
 _Avoid_: library hash, version
 
 **Public build / Secret build**:
@@ -65,7 +65,7 @@ One fixed mix of patient details that is hashed together, e.g. first name + last
 _Avoid_: token type, composite, combination
 
 **Hash value**:
-The scrambled result of one hash rule for one patient row. Each row has 11 slots, one per hash rule. A slot is empty when the row lacks a detail that hash rule needs, such as an SSN. The two slots that use the first 3 letters of the first name are also empty on a row added for a split last name.
+The scrambled result of one hash rule for one patient row. Each row has 11 slots, one per hash rule. A slot is empty when the row lacks a detail that hash rule needs, such as an SSN.
 _Avoid_: token, hash column, hash
 
 **PIDHASH**:

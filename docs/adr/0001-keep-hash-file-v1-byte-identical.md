@@ -14,5 +14,5 @@ Known v1 format problems wait for a later v2:
 
 ## Considered options
 
-- A v2 that the reader accepts with v1: fixes the problems now, but sites must upgrade hashing to send v2.
+- A v2 that the reader also accepts: fixes the problems now, but sites must upgrade hashing to send v2.
 - Free to break the format: simplest code, but every site in a project must run hashing again.
