@@ -92,6 +92,7 @@ Support repos and this workspace repo have `master` only. Work goes into `master
 
 Branch protection is not turned on yet. It waits for the CI job name of each repo ([linkja-workspace#9](https://github.com/MRAIA-ORG/linkja-workspace/issues/9)).
 Until then, GitHub lets anyone with write access push to `develop` and `master`. Do not do it. Use a PR.
+
 When protection is on, `develop` and `master` will require a PR and passing CI. An admin can bypass this.
 
 ## Make a change
@@ -111,9 +112,11 @@ When protection is on, `develop` and `master` will require a PR and passing CI. 
    gh pr create --base develop
    ```
 
-4. Fill in the PR template: what changed and why, the linked issue, the commands you ran and their result, the review rounds, and handoff notes.
-5. CI must pass.
-6. Get a review from someone who did not write the change. GitHub requires 0 approvals, so this rule is on the person who merges. Fix what the review finds and get the fix reviewed too.
+4. Fill in the PR template. It asks for the change and its reason, the issue, the commands you ran, and the review.
+5. When the repo has CI, it must pass. No code repo has CI yet (see Known gaps).
+6. Get a review from someone who did not write the change. The person who merges checks that this happened.
+   Branch protection ([linkja-workspace#9](https://github.com/MRAIA-ORG/linkja-workspace/issues/9)) will require CI and no approvals, so this rule stays with people.
+   Fix what the review finds and get the fix reviewed too.
 7. Squash-merge.
 
 ## Commit messages
@@ -134,27 +137,37 @@ Write new code in the style of the code around it. Do not reformat old code, in 
 
 ### Java
 
-- Indent with 2 spaces. No tabs.
+- New code indents with 2 spaces and no tabs. Some older files use 4 spaces or tabs. Keep the style of the file you edit.
 - The opening brace goes at the end of the line, for classes, methods and blocks.
 - Most code writes `} else {` and `} catch (...) {` on one line. Some older code puts `else` and `catch` on a new line. Match the file.
 - Put a space after `if`, `for` and `while`.
 - Constants are `UPPER_SNAKE_CASE`. Classes are `UpperCamelCase`. Methods and fields are `lowerCamelCase`.
 - Keep lines to 120 characters.
 
-Exception: in linkja-matching, `ExternalSort.java`, `GlobalMatchSqlite.java` and `GlobalMatchTasks.java` indent with tabs.
-`ExternalSort.java`, `GlobalMatchTasks.java`, `BinaryFileBuffer.java` and `StringSizeEstimator.java` have CRLF line ends. `GlobalMatchSqlite.java` has LF line ends.
-Keep them as they are. When you copy `.editorconfig` into linkja-matching, add this section at the end, so that an editor does not rewrite those files:
+Older files that indent another way:
+
+- linkja-crypto: `Library.java`, `AesResult.java` and `RsaResult.java` use 4 spaces.
+- linkja-hashing: `Engine.java`, `EngineTest.java` and `DataHeaderMapTest.java` have some lines with tabs.
+- linkja-matching: `BinaryFileBuffer.java` uses 4 spaces. `ExternalSort.java`, `GlobalMatchSqlite.java` and `GlobalMatchTasks.java` use tabs.
+
+In linkja-matching, `ExternalSort.java`, `GlobalMatchTasks.java`, `BinaryFileBuffer.java` and `StringSizeEstimator.java` have CRLF line ends. `GlobalMatchSqlite.java` has LF line ends.
+`GlobalMatchTasks.java` has trailing spaces. `BinaryFileBuffer.java` and `StringSizeEstimator.java` have no newline at the end of the file.
+Keep them as they are. When you copy `.editorconfig` into linkja-matching, add these sections at the end, so that an editor does not rewrite those files:
 
 ```ini
 [src/main/java/org/linkja/matching/{ExternalSort,GlobalMatchTasks}.java]
 indent_style = tab
 end_of_line = crlf
 
+[src/main/java/org/linkja/matching/GlobalMatchTasks.java]
+trim_trailing_whitespace = false
+
 [src/main/java/org/linkja/matching/GlobalMatchSqlite.java]
 indent_style = tab
 
 [src/main/java/org/linkja/matching/{BinaryFileBuffer,StringSizeEstimator}.java]
 end_of_line = crlf
+insert_final_newline = false
 ```
 
 ### C (linkja-crypto)
@@ -204,7 +217,8 @@ Do these steps in this order. All of them are **release time, not run here**, ex
    mvn versions:set -DnewVersion=1.2.0 -DgenerateBackupPoms=false
    ```
 
-2. Open a release PR from `develop` into `master`. Merge it with a merge commit. Do not squash a release PR: a squash gives `master` a commit that `develop` does not have, and the next release then has conflicts.
+2. Open a release PR from `develop` into `master`. Merge it with a merge commit. Do not squash a release PR.
+   A squash gives `master` a commit that `develop` does not have. The next release then has conflicts.
 
    ```sh
    gh pr create --base master --head develop --title "chore(release): v1.2.0"
@@ -223,8 +237,10 @@ Do these steps in this order. All of them are **release time, not run here**, ex
 
    ```sh
    git switch master && git pull --ff-only
-   mvn deploy
+   mvn deploy -DskipTests
    ```
+
+   `-DskipTests` is necessary for linkja-core, because its tests cannot load the native library yet (see Known gaps).
 
    `mvn deploy` overwrites a version that is already in linkja-mvn-repo and does not warn you. Check that the version is new before you run it.
 
@@ -252,4 +268,7 @@ These were true when this file was written. Each one is a separate piece of work
 - linkja-core and linkja-crypto still compile for Java 8 (`1.8`). The three programs on `develop` already compile for Java 25.
 - The poms carry release versions (e.g. `1.1.0`) on `develop`. The `-SNAPSHOT` flow above starts when a PR sets the first `-SNAPSHOT` version.
 - The programs download linkja-core and linkja-crypto from `https://raw.github.com/linkja/linkja-mvn-repo/master`, the old organization.
-- The linkja-core tests need the native linkja-crypto library. On `develop`, that library does not compile with Apple clang (a declaration in `linkja-crypto.h` does not match its definition in `linkja-crypto.c`). Until that is fixed, `mvn install` in linkja-core fails on a Mac, and `mvn install -DskipTests` is the only way to install it.
+- The linkja-core tests load the native linkja-crypto library from `linkja-core/lib`. That folder has no library in it.
+  Until a build puts it there, `mvn install` in linkja-core fails. Use `mvn install -DskipTests`.
+  On `develop`, the native library does not compile with Apple clang. A declaration in `linkja-crypto.h` does not match `linkja-crypto.c`.
+- No code repo has CI yet. [linkja-workspace#2](https://github.com/MRAIA-ORG/linkja-workspace/issues/2) and #4 to #7 add one Linux CI job per repo.
