@@ -87,6 +87,7 @@ Code repos have two long-lived branches:
 
 - `develop` gets all work, by PR.
 - `master` gets only releases. A release merges `develop` into `master` and gets a tag `vX.Y.Z`.
+- `develop` is the default branch. So a PR into `develop` that says `Closes MRAIA-ORG/linkja-workspace#N` closes that ticket when it merges.
 
 Support repos and this workspace repo have `master` only. Work goes into `master` by PR.
 
