@@ -77,7 +77,9 @@ Code repos have two long-lived branches:
 
 Support repos and this workspace repo have `master` only. Work goes into `master` by PR.
 
-`develop` and `master` are protected. A PR and passing CI are required. An admin can bypass this.
+Branch protection is not turned on yet. It waits for the CI job name of each repo ([linkja-workspace#9](https://github.com/MRAIA-ORG/linkja-workspace/issues/9)).
+Until then, GitHub lets anyone with write access push to `develop` and `master`. Do not do it. Use a PR.
+When protection is on, `develop` and `master` will require a PR and passing CI. An admin can bypass this.
 
 ## Make a change
 
