@@ -73,7 +73,7 @@ The hash value made from the site's own patient ID, the site ID, the private dat
 _Avoid_: patient token
 
 **Crosswalk**:
-The file each site keeps that pairs its own patient IDs with their PIDHASH values. The site needs it to apply the matching result to its own records, and it must never leave the site.
+The file each site keeps that pairs its own patient IDs with their PIDHASH values, after the library secret is added. The site needs it to apply the matching result to its own records, and it must never leave the site.
 _Avoid_: mapping file, lookup
 
 **Invalid data file**:
@@ -81,11 +81,11 @@ The file each site keeps that lists the input rows hashing rejected, with their 
 _Avoid_: error file, reject file
 
 **Hash file**:
-The file a site sends to the aggregator. It holds a header, an envelope and the hidden hash values of every patient row, in that order.
+The file a site sends to the aggregator. It holds a header, an envelope and the hidden hash values of every accepted patient row, in that order.
 _Avoid_: output file, encrypted file, token file
 
 **Header**:
-The first part of a hash file. It names the site and project, and gives the number of hash values per row and the row count.
+The first part of a hash file. It gives the format version, names the site and project, and gives the number of hash values per row and the row count.
 _Avoid_: metadata block
 
 **Envelope**:
