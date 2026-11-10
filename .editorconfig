@@ -18,6 +18,3 @@ max_line_length = 120
 # Two trailing spaces are a line break in Markdown, so keep them.
 [*.md]
 trim_trailing_whitespace = false
-
-[*.{yml,yaml}]
-indent_size = 2
