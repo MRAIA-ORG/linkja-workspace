@@ -1,6 +1,6 @@
 # Keep the hash file format v1 byte-identical during the redesign
 
-The new hash file module in linkja-core takes over the write and read code from linkja-hashing and linkja-matching. Its output stays byte-for-byte equal to today's version 1 files.
+The header and envelope code is already in linkja-core. The new hash file module there takes over the row writer from linkja-hashing and the row reader from linkja-matching. Its output stays byte-for-byte equal to today's version 1 files.
 
 Sites may already hold v1 files. Sites on old and new versions must be able to join one project.
 
@@ -14,5 +14,5 @@ Known v1 format problems wait for a later v2:
 
 ## Considered options
 
-- A new v2 that the reader accepts alongside v1: fixes the problems now, but every site must upgrade hashing before it sends v2 files.
+- A v2 that the reader accepts with v1: fixes the problems now, but sites must upgrade hashing to send v2.
 - Free to break the format: simplest code, but every site in a project must run hashing again.
