@@ -19,29 +19,29 @@ linkja-core and linkja-crypto are libraries. linkja-hashing, linkja-matching and
 
 ### Tools
 
-You need Java 17, Maven, CMake, OpenSSL 3 and cmocka (the C unit test library).
+You need Java 25, Maven, CMake, OpenSSL 3 and cmocka (the C unit test library).
 
 Install them with Homebrew (**not run here**: the tools were already installed on the test machine):
 
 ```sh
-brew install openjdk@17 maven cmake openssl@3 cmocka
+brew install openjdk@25 maven cmake openssl@3 cmocka
 ```
 
 Check what you have:
 
 ```sh
-brew list --versions openjdk@17 maven cmake openssl@3 cmocka
+brew list --versions openjdk@25 maven cmake openssl@3 cmocka
 ```
 
-Maven uses the newest JDK it finds. On a Mac with a newer Homebrew `openjdk`, that is not Java 17.
+Maven uses the newest JDK it finds. On a Mac with a newer Homebrew `openjdk`, that is not Java 25.
 Set `JAVA_HOME` in every shell where you build:
 
 ```sh
-export JAVA_HOME=/opt/homebrew/opt/openjdk@17
+export JAVA_HOME=/opt/homebrew/opt/openjdk@25
 mvn -v
 ```
 
-`mvn -v` must show `Java version: 17`.
+`mvn -v` must show `Java version: 25`.
 
 ### Get all the repos
 
@@ -231,7 +231,7 @@ Do these steps in this order. All of them are **release time, not run here**, ex
 
 These were true when this file was written. Each one is a separate piece of work.
 
-- The poms do not use Java 17 yet. linkja-core and linkja-crypto compile for Java 8 (`1.8`). The three programs compile for Java 25, so they do not build with Java 17.
+- linkja-core and linkja-crypto still compile for Java 8 (`1.8`). The three programs on `develop` already compile for Java 25.
 - The poms carry release versions (e.g. `1.1.0`) on `develop`. The `-SNAPSHOT` flow above starts when a PR sets the first `-SNAPSHOT` version.
 - The programs download linkja-core and linkja-crypto from `https://raw.github.com/linkja/linkja-mvn-repo/master`, the old organization.
 - The linkja-core tests need the native linkja-crypto library. On `develop`, that library does not compile with Apple clang (a declaration in `linkja-crypto.h` does not match its definition in `linkja-crypto.c`). Until that is fixed, `mvn install` in linkja-core fails on a Mac, and `mvn install -DskipTests` is the only way to install it.
