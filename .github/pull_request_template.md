@@ -9,7 +9,7 @@ Closes #
 ## How it was verified
 
 <!-- Each command you ran, and what it printed. E.g.:
-`JAVA_HOME=/opt/homebrew/opt/openjdk@17 mvn -B verify` : BUILD SUCCESS, 31 tests, 0 failures -->
+`mvn -B verify` (Java 25) : BUILD SUCCESS, 31 tests, 0 failures -->
 
 - `command` : result
 
