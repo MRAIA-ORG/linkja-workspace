@@ -75,7 +75,7 @@ The old `linux-build` branch in linkja-crypto was deleted. Its tip was `5974d36`
 **Traps.**
 - Read the pipeline that calls a class before you write a claim about it. `HashingStep` has code for derived rows, but hashing turns that feature off (`PermuteStep(false)`).
 - A fix to one long sentence can change what the next sentence points back to. Two rounds were spent on that.
-- `gh pr merge` is blocked for a PR with 25 or more lines of code and no review. Post the verdict as a PR comment. It must contain `PASS` or `BLOCK`.
+- `gh pr merge` is blocked for a PR with 25 or more lines of code and no review. Post the verdict as a PR comment with a line that starts with `PASS` or `BLOCK`.
 
 **Deliberately not done.** No branch protection yet (ticket 9). The old clone at `/Users/yw1084/code/linkja-core` is still there.
 
@@ -86,12 +86,15 @@ The old `linux-build` branch in linkja-crypto was deleted. Its tip was `5974d36`
 Facts for ticket 4:
 - linkja-core tests fail on a clean clone. `linkja-core/lib` holds no native library, so the tests cannot load it.
 - The C library fixes are on linkja-crypto `develop` only. linkja-core CI must compile linkja-crypto from `develop`.
-- The secret build and the no-secrets build of linkja-crypto share one CMake cache. Reconfigure with `-DINCLUDE_SECRETS=OFF`, then `make`, to switch.
+- The secret build and the no-secrets build of linkja-crypto share one CMake cache. Reconfigure with `-DINCLUDE_SECRETS=OFF` or `=ON`, then `make`, to switch.
 
 **Then, in order:**
 1. Tickets 5, 6 and 7 (Java 25 and CI in linkja-hashing, linkja-matching, linkja-salt-engine). They can run in parallel lanes after ticket 4.
 2. Ticket 8 (Docker images).
-3. Ticket 9 (branch protection), once each repo has a CI job name.
+3. Ticket 9 (branch protection). It needs a CI job name in each repo.
+   GitHub lists tickets 2 and 4 to 7 as its blockers.
+   Those tickets can stay open after their PRs merge (see Waits on the owner).
+   When those PRs are merged, ticket 9 can start.
 4. Ticket 24 (README links). When it merges, close ticket 1.
 5. Follow-ups filed today: 23, 25, 27, 28, 29, 30, 32. Also 20 and 21, which have no blockers.
 
