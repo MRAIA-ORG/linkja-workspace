@@ -1,0 +1,20 @@
+# Editor settings for the MRAIA linkja repos. Each repo copies this file.
+# The values follow what the current code does. CONTRIBUTING.md explains them.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# Most of linkja-crypto.c uses 2 spaces. The older OpenSSL wrapper functions at
+# the top of it use 4. Match the function you edit.
+[*.{java,c,h,sh}]
+max_line_length = 120
+
+# Two trailing spaces are a line break in Markdown, so keep them.
+[*.md]
+trim_trailing_whitespace = false
