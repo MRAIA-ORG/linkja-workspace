@@ -4,7 +4,7 @@
 
 ## Linked issue
 
-Closes #
+Closes MRAIA-ORG/linkja-workspace#
 
 ## How it was verified
 

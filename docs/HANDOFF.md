@@ -44,6 +44,8 @@ within hours. Derive them with `gh issue list` and the scripts in the repo.
 - SQL-hashing is legacy. No work beyond its README.
 - Test secret files in linkja-test-data stay, with a warning.
 - Glossary words: "salt" and "hash value". "Token" is not used.
+- `develop` is the default branch of the 5 code repos. `master` gets only releases. Decided by the owner later on 2026-11-10.
+- Ticket 19 (two salt-like strings in SQL-hashing) is closed as not planned. Do not raise it again.
 - Design order: foundation, then golden tests, then design work (crypto seam, hash file module, Engine split, match rules as data).
 
 **Decisions Claude made, open to the owner's overrule.**
@@ -93,14 +95,12 @@ Facts for ticket 4:
 2. Ticket 8 (Docker images).
 3. Ticket 9 (branch protection). It needs a CI job name in each repo.
    GitHub lists tickets 2 and 4 to 7 as its blockers.
-   Those tickets can stay open after their PRs merge (see Waits on the owner).
-   When those PRs are merged, ticket 9 can start.
+   Ticket 2 stays open for a Windows build check and ticket 28.
+   When tickets 4 to 7 close, remove the ticket 2 link and start ticket 9.
 4. Ticket 24 (README links). When it merges, close ticket 1.
 5. Follow-ups filed today: 23, 25, 27, 28, 29, 30, 32. Also 20 and 21, which have no blockers.
 
 Recount open tickets: `gh issue list -R MRAIA-ORG/linkja-workspace --state open`. See which can start: `gh api repos/MRAIA-ORG/linkja-workspace/issues/<n>/dependencies/blocked_by --jq '[.[].number]'`.
 
 **Waits on the owner.**
-- Ticket 19: whether two salt-like strings in SQL-hashing comments ever protected real data. The owner marked it not urgent.
 - Optional: overrule any decision Claude made above.
-- `Closes #N` closes nothing for PRs into `develop`, because `master` is the default branch in the code repos. Decide: make `develop` the default branch, or close tickets at release. Ticket 2 also waits for a Windows build check and the macOS universal library (ticket 28).
