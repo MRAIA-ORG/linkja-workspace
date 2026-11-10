@@ -127,13 +127,16 @@ Write new code in the style of the code around it. Do not reformat old code, in 
 - Keep lines to 120 characters.
 
 Exception: in linkja-matching, `ExternalSort.java`, `GlobalMatchSqlite.java` and `GlobalMatchTasks.java` indent with tabs.
-These three and `BinaryFileBuffer.java` and `StringSizeEstimator.java` have CRLF line ends.
+`ExternalSort.java`, `GlobalMatchTasks.java`, `BinaryFileBuffer.java` and `StringSizeEstimator.java` have CRLF line ends. `GlobalMatchSqlite.java` has LF line ends.
 Keep them as they are. When you copy `.editorconfig` into linkja-matching, add this section at the end, so that an editor does not rewrite those files:
 
 ```ini
-[src/main/java/org/linkja/matching/{ExternalSort,GlobalMatchSqlite,GlobalMatchTasks}.java]
+[src/main/java/org/linkja/matching/{ExternalSort,GlobalMatchTasks}.java]
 indent_style = tab
 end_of_line = crlf
+
+[src/main/java/org/linkja/matching/GlobalMatchSqlite.java]
+indent_style = tab
 
 [src/main/java/org/linkja/matching/{BinaryFileBuffer,StringSizeEstimator}.java]
 end_of_line = crlf
