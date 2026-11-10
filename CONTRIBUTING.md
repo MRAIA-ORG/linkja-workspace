@@ -33,11 +33,11 @@ Check what you have:
 brew list --versions openjdk@25 maven cmake openssl@3 cmocka
 ```
 
-Maven uses the newest JDK it finds. On a Mac with a newer Homebrew `openjdk`, that is not Java 25.
-Set `JAVA_HOME` in every shell where you build:
+Every Maven command needs Java 25. Maven uses the newest JDK it finds, and on a Mac with a newer Homebrew `openjdk`, that is not Java 25.
+Set `JAVA_HOME` to your Java 25 install in every shell where you build. With Homebrew:
 
 ```sh
-export JAVA_HOME=/opt/homebrew/opt/openjdk@25
+export JAVA_HOME="$(brew --prefix openjdk@25)"
 mvn -v
 ```
 
@@ -67,6 +67,19 @@ The repo list is in `scripts/repos.txt`. To check the script itself (it clones f
 ```sh
 linkja-workspace/scripts/test-clone-all.sh
 ```
+
+### Install the libraries
+
+linkja-core needs the linkja-crypto jar in your local Maven repository (`~/.m2`). Install linkja-crypto first, then linkja-core:
+
+```sh
+cd linkja-crypto
+mvn install
+cd ../linkja-core
+mvn install -DskipTests
+```
+
+Use `-DskipTests` in linkja-core for now, because its tests cannot load the native linkja-crypto library yet (see Known gaps).
 
 ## Branches
 
@@ -163,12 +176,12 @@ end_of_line = crlf
 
 During development, a program uses a `-SNAPSHOT` build of linkja-core or linkja-crypto from your local Maven repository (`~/.m2`).
 
-1. In the library, give `develop` the next version with `-SNAPSHOT` and install it:
+1. Install linkja-crypto first (see Install the libraries). Then give linkja-core's `develop` the next version with `-SNAPSHOT` and install it:
 
    ```sh
    cd linkja-core
    mvn versions:set -DnewVersion=1.2.0-SNAPSHOT -DgenerateBackupPoms=false
-   mvn install
+   mvn install -DskipTests
    ```
 
 2. In the program's `pom.xml`, set the `<version>` of the `linkja-core` dependency to the same `1.2.0-SNAPSHOT`.
