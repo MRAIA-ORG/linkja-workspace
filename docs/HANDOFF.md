@@ -112,11 +112,11 @@ Recount open tickets: `gh issue list -R MRAIA-ORG/linkja-workspace --state open`
 **Decisions (owner, 2026-11-13).**
 - linkja-matching ships one jar per platform. The Intel Mac and Apple Silicon JavaFX files have the same names, so one jar cannot hold both. Only `--gui` needs the jar of its own platform. Command-line matching and `--decrypt` load no JavaFX and run from any jar.
 - Program CI compiles the public build of the C library. This supersedes the 2026-11-10 plan of a secret build with a throwaway secret.
+- Ticket 8 (Docker images) waits for real releases. No tag holds the Java 25 code, and the C library fixes are only on linkja-crypto `develop`. The images use released code only, so ticket 8 waits on the linkja-core version (ticket 37) and a linkja-crypto release (ticket 2).
 
 **Decisions Claude made, open to the owner's overrule.**
 - Ticket 5 closed with Bouncy Castle 1.61 still in the hashing jar. It comes from the released linkja-core 1.1.0. The fix is the next linkja-core release (ticket 37).
 - The last review of linkja-matching found README and CI nits for arm64. They went into ticket 46, with no fifth review round for README wording.
-- Ticket 8 pins each image to a `develop` commit, and the crypto image uses linkja-crypto `develop`. The ticket text says "a fixed tag" and "`master` of linkja-crypto", but it was written before the Java 25 work. No tag holds Java 25 code, and the C library fixes are only on `develop`. The ticket allows "a fixed tag or commit".
 
 **Facts the next tickets need.**
 - Every CI job in the five code repos is named `linux` (linkja-crypto included). Ticket 9 needs that name for the required check.
@@ -136,24 +136,23 @@ Recount open tickets: `gh issue list -R MRAIA-ORG/linkja-workspace --state open`
 
 **Next.**
 
-**First task:** ticket 8 (linkja-docker: Java 25 images from MRAIA-ORG at fixed versions). It has no open blockers.
+**First task:** review and merge the open `docs/handoff-2026-11-13` PR in this repo (this handoff). The owner chose to leave it open on 2026-11-13, because its last correction had no independent review. Dispatch `fresh-eye` on it, fix what blocks, then merge. Find it with `gh pr list -R MRAIA-ORG/linkja-workspace --head docs/handoff-2026-11-13`.
 
-Facts for ticket 8:
-- Pin each image to a `develop` commit of its repo, and build linkja-crypto from `develop`. See the decision above. Pick the commits with `git ls-remote https://github.com/MRAIA-ORG/<repo> refs/heads/develop`.
-- The current Dockerfiles clone `github.com/linkja/...` with no ref, and use `adoptopenjdk/openjdk11` base images.
-- The crypto image clones `-b linux-build`. That branch was deleted on 2026-11-10, so the image cannot build today.
-- `test-data/liblinkjacrypto.so` in linkja-docker is a committed binary. Find out what uses it before you change it.
-- linkja-matching on Linux needs the `linux` JavaFX classifier, which the profile picks on an x64 builder.
+**Then:** ticket 9 (branch protection on `develop` and `master` of the five code repos). Its blockers are closed. The required check is `linux` in each repo. `master` of the five code repos has no CI file until the next release PR from `develop`, so check that requiring `linux` on `master` does not block that PR. linkja-core `master` is ahead of `develop`, so read both before the first release PR.
 
 **Then, in order:**
-1. Ticket 9 (branch protection on `develop` and `master` of the five code repos). Its blockers are closed. The required check is `linux` in each repo. `master` of the five code repos has no CI file until the next release PR from `develop`, so check that requiring `linux` on `master` does not block that PR.
+1. Ticket 8 (Docker images), only after the releases named above. Facts for it:
+   - The Dockerfiles clone the old `github.com/linkja/...` repos with no ref, and use `adoptopenjdk/openjdk11` base images. The matching image uses `adoptopenjdk/openjdk11:alpine` (musl). JavaFX Linux natives and a glibc C library may not load on Alpine.
+   - The crypto image clones `-b linux-build` from the old `linkja` org. That branch still exists there. Only the MRAIA-ORG copy was deleted.
+   - `test-data/liblinkjacrypto.so` is a committed x86-64 binary. Only the program READMEs name it.
+   - On an Apple Silicon Mac, `docker build` gives arm64, and the matching pom has no arm64 Linux default. Use `--platform linux/amd64`.
 2. Ticket 24 (workspace README links). When it merges, close ticket 1.
 3. Ticket 38 (linkja-crypto CMake without cmocka). Then drop cmocka from the three program CI jobs that compile the C library (core, hashing, salt-engine). linkja-crypto CI keeps it for its C tests.
-4. Ticket 10 (golden test, hashing to decrypted output). Its CI needs the secret build. Then ticket 11 (golden test, matching output), then the design tickets 12 to 18 in the 2026-11-10 design order. Ticket 2 stays open until the Windows build check and ticket 28.
+4. Ticket 10 (golden test, hashing to decrypted output). Its CI needs the secret build. Then ticket 11 (golden test, matching output), then the design tickets 12 to 18 in the 2026-11-10 design order. Ticket 2 stays open until the Windows build check, ticket 28 and the linkja-crypto release from `develop` to `master`.
 5. Follow-ups, `ready-for-agent` first: 34, 35, 36, 39, 40, 41, 42, 44, 45. Then 46 and 43 (43 waits on 28). Older: 20, 21, 23, 25, 27, 28, 29, 30, 32.
 
 Recount open tickets: `gh issue list -R MRAIA-ORG/linkja-workspace --state open`. Agent-ready: `gh issue list -R MRAIA-ORG/linkja-workspace --label ready-for-agent`. See which can start: `gh api repos/MRAIA-ORG/linkja-workspace/issues/<n>/dependencies/blocked_by --jq '[.[] | select(.state=="open") | .number]'`.
 
 **Waits on the owner.**
-- **Ticket 37: pick the next linkja-core version (e.g. 1.2.0).** Needed before any deploy to linkja-mvn-repo. It also removes Bouncy Castle 1.61 from the program jars.
+- **Ticket 37: pick the next linkja-core version (e.g. 1.2.0).** Needed before any deploy to linkja-mvn-repo. It also removes Bouncy Castle 1.61 from the program jars, and ticket 8 waits on it.
 - Optional: overrule any decision Claude made above.
