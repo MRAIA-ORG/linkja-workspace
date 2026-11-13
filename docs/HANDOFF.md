@@ -115,17 +115,19 @@ Recount open tickets: `gh issue list -R MRAIA-ORG/linkja-workspace --state open`
 
 **Decisions Claude made, open to the owner's overrule.**
 - Ticket 5 closed with Bouncy Castle 1.61 still in the hashing jar. It comes from the released linkja-core 1.1.0. The fix is the next linkja-core release (ticket 37).
-- The last review of linkja-matching found 3 README and CI nits for arm64. They went into ticket 46, with no fifth review round for README wording.
+- The last review of linkja-matching found README and CI nits for arm64. They went into ticket 46, with no fifth review round for README wording.
+- Ticket 8 pins each image to a `develop` commit, and the crypto image uses linkja-crypto `develop`. The ticket text says "a fixed tag" and "`master` of linkja-crypto", but it was written before the Java 25 work. No tag holds Java 25 code, and the C library fixes are only on `develop`. The ticket allows "a fixed tag or commit".
 
 **Facts the next tickets need.**
-- Every new CI job is named `linux`. Ticket 9 needs that name for the required check.
+- Every CI job in the five code repos is named `linux` (linkja-crypto included). Ticket 9 needs that name for the required check.
+- Three program CI jobs compile the public build of the C library: linkja-core, linkja-hashing and linkja-salt-engine. linkja-matching CI only packages the jar and resolves JavaFX, so it needs no C library and no cmocka.
 - linkja-core: two tests failed on Java 25 before this work. `AES/GCM/PKCS5Padding` stopped resolving in Java 14 (OpenJDK JDK-8180392), and `AES/GCM/NoPadding` gives the same bytes. The C library accepts only 2048-bit RSA keys, and the old test keys were 1024-bit.
 - Tests find the C library through the `native.lib.dir` Maven property (default `lib/`). The committed `lib/` libraries in salt-engine and matching are x86_64 only (ticket 43).
 - The released linkja-core 1.1.0 in linkja-mvn-repo differs from linkja-core `develop`, which is also labelled 1.1.0. Never `mvn deploy` before ticket 37 picks a new version.
 
 **Traps.**
-- **GitHub runs no CI on a PR with a merge conflict, and says nothing.** `gh pr checks` reports "no checks". Jonathan Carr pushed README commits to hashing and matching `develop` on 2026-11-12, after the lanes started. Check `gh pr view <n> --json mergeable` before you wait for CI.
-- **linkja-crypto CMake requires cmocka on Linux and macOS.** Its find module sets `LIBCMOCKA_FOUND`, never `CMOCKA_FOUND` (ticket 38). Every CI job installs `libcmocka-dev`.
+- **GitHub runs no CI on a PR with a merge conflict, and says nothing.** `gh pr checks` reports "no checks". Jonathan Carr pushed README commits to hashing and matching `develop` on 2026-11-12, after the lanes started. On an open PR, check `gh pr view <n> --json mergeable` before you wait for CI.
+- **linkja-crypto CMake requires cmocka on Linux and macOS.** Its find module sets `LIBCMOCKA_FOUND`, never `CMOCKA_FOUND` (ticket 38). Every CI job that compiles the C library installs `libcmocka-dev`.
 - **linkja-crypto `cmake` on macOS needs `JAVA_HOME`** and `-DOPENSSL_ROOT_DIR="$(brew --prefix openssl@3)"`. Homebrew `openssl@3` is keg-only (ticket 39).
 - **Parallel lanes need their own Maven folder.** Each builder used `-Dmaven.repo.local=<scratch>/m2-<repo>`. That also proves a clean machine resolves everything.
 - **`git -C <worktree> commit` from a folder on `master` can be blocked** by the safety hook. Run the commit from inside the worktree.
@@ -136,12 +138,19 @@ Recount open tickets: `gh issue list -R MRAIA-ORG/linkja-workspace --state open`
 
 **First task:** ticket 8 (linkja-docker: Java 25 images from MRAIA-ORG at fixed versions). It has no open blockers.
 
+Facts for ticket 8:
+- Pin each image to a `develop` commit of its repo, and build linkja-crypto from `develop`. See the decision above. Pick the commits with `git ls-remote https://github.com/MRAIA-ORG/<repo> refs/heads/develop`.
+- The current Dockerfiles clone `github.com/linkja/...` with no ref, and use `adoptopenjdk/openjdk11` base images.
+- The crypto image clones `-b linux-build`. That branch was deleted on 2026-11-10, so the image cannot build today.
+- `test-data/liblinkjacrypto.so` in linkja-docker is a committed binary. Find out what uses it before you change it.
+- linkja-matching on Linux needs the `linux` JavaFX classifier, which the profile picks on an x64 builder.
+
 **Then, in order:**
-1. Ticket 9 (branch protection on `develop` and `master` of the five code repos). Its blockers are closed. The required check is `linux` in each repo. `master` of the four Java repos has no CI file until the next release PR from `develop`, so check that requiring `linux` on `master` does not block that PR.
+1. Ticket 9 (branch protection on `develop` and `master` of the five code repos). Its blockers are closed. The required check is `linux` in each repo. `master` of the five code repos has no CI file until the next release PR from `develop`, so check that requiring `linux` on `master` does not block that PR.
 2. Ticket 24 (workspace README links). When it merges, close ticket 1.
-3. Ticket 38 (linkja-crypto CMake without cmocka). Then drop cmocka from the four CI jobs.
-4. Ticket 10 (golden test, hashing to decrypted output). Its CI needs the secret build.
-5. Follow-ups, `ready-for-agent` first: 34, 35, 36, 39, 40, 41, 42, 44, 45, 46. Older: 20, 21, 23, 25, 27, 28, 29, 30, 32.
+3. Ticket 38 (linkja-crypto CMake without cmocka). Then drop cmocka from the three program CI jobs that compile the C library (core, hashing, salt-engine). linkja-crypto CI keeps it for its C tests.
+4. Ticket 10 (golden test, hashing to decrypted output). Its CI needs the secret build. Then ticket 11 (golden test, matching output), then the design tickets 12 to 18 in the 2026-11-10 design order. Ticket 2 stays open until the Windows build check and ticket 28.
+5. Follow-ups, `ready-for-agent` first: 34, 35, 36, 39, 40, 41, 42, 44, 45. Then 46 and 43 (43 waits on 28). Older: 20, 21, 23, 25, 27, 28, 29, 30, 32.
 
 Recount open tickets: `gh issue list -R MRAIA-ORG/linkja-workspace --state open`. Agent-ready: `gh issue list -R MRAIA-ORG/linkja-workspace --label ready-for-agent`. See which can start: `gh api repos/MRAIA-ORG/linkja-workspace/issues/<n>/dependencies/blocked_by --jq '[.[] | select(.state=="open") | .number]'`.
 
