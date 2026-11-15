@@ -136,10 +136,16 @@ Recount open tickets: `gh issue list -R MRAIA-ORG/linkja-workspace --state open`
 
 **Next.**
 
-**First task:** ticket 9 (branch protection on `develop` and `master` of the five code repos). GitHub lists no open blocker for it. The "Blocked by" list in its body is out of date and still names ticket 2. Read the owner's 2026-11-15 comment on ticket 9 first: keep `develop` plus `master`, and keep admin bypass, because Jonathan Carr and Larry Lemmon push directly to `develop`. Admin bypass comes off only after the owner tells them. Before you require `linux` on linkja-crypto `develop`, look at its last CI run: `gh run list -R MRAIA-ORG/linkja-crypto --branch develop --limit 1`. On 2026-11-12 Jonathan Carr pushed a `pom.xml` change there, and that run failed because Maven Central did not serve `maven-resources-plugin:3.4.0` at that time. The required check is `linux` in each repo. `master` of the five code repos has no CI file until the next release PR from `develop`, so check that requiring `linux` on `master` does not block that PR. linkja-core `master` is ahead of `develop`, so read both before the first release PR.
+**First task:** ticket 9 (branch protection on `develop` and `master` of the five code repos).
+- The required check is `linux` in each repo.
+- GitHub lists no open blocker for ticket 9. The "Blocked by" list in its body is out of date and still names ticket 2.
+- Read the owner's 2026-11-15 comment on ticket 9 first. It keeps `develop` plus `master`, and keeps admin bypass, because Jonathan Carr and Larry Lemmon push directly to `develop`. Admin bypass comes off only after they have used PRs with CI for a few weeks, and after the owner tells them.
+- The last CI run on linkja-crypto `develop` failed. Check it with `gh run list -R MRAIA-ORG/linkja-crypto --branch develop --limit 1`. It ran on Jonathan Carr's `pom.xml` push of 2026-11-12, when Maven Central did not serve `maven-resources-plugin:3.4.0`. Do not re-run it without a change. The next PR into `develop` runs CI again.
+- `master` of the five code repos has no CI file until the next release PR from `develop`. Check that requiring `linux` on `master` does not block that PR.
+- linkja-core `master` is ahead of `develop`, so read both before the first release PR.
 
 **Then, in order:**
-1. Ticket 8 (Docker images), only after the releases named above. Facts for it:
+1. Ticket 8 (Docker images), only after the releases named in the 2026-11-13 decisions (tickets 37 and 2). Facts for it:
    - The Dockerfiles clone the old `github.com/linkja/...` repos with no ref, and use `adoptopenjdk/openjdk11` base images. The matching image uses `adoptopenjdk/openjdk11:alpine` (musl). JavaFX Linux natives and a glibc C library may not load on Alpine.
    - The crypto image clones `-b linux-build` from the old `linkja` org. That branch still exists there. Only the MRAIA-ORG copy was deleted.
    - `test-data/liblinkjacrypto.so` is a committed x86-64 binary. The program READMEs name it, and the linkja-docker root README links to its folder.
