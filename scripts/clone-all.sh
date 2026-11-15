@@ -42,9 +42,7 @@ update() {
   counts=$(git -C "$parent/$1" rev-list --left-right --count 'HEAD...@{upstream}')
   ahead=${counts%%[[:space:]]*}
   behind=${counts##*[[:space:]]}
-  if [ "$ahead" -gt 0 ]; then
-    echo "$1: fetched only, $branch has $ahead local commit(s) that are not on its upstream"
-  elif [ "$behind" -eq 0 ]; then
+  if [ "$behind" -eq 0 ]; then
     echo "$1: already up to date, on $branch"
   else
     git -C "$parent/$1" merge --quiet --ff-only '@{upstream}'
