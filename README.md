@@ -4,4 +4,4 @@ Suite-level home for the MRAIA linkja repositories: the shared glossary, design 
 
 - [`GLOSSARY.md`](GLOSSARY.md): the words the linkja suite uses, and the words to avoid.
 - [`docs/adr/`](docs/adr/): decisions that are hard to reverse, with the reason for each.
-- [Issues](https://github.com/MRAIA-ORG/linkja-workspace/issues): the plan of work, with open tickets and lanes.
+- [Issues](https://github.com/MRAIA-ORG/linkja-workspace/issues): the plan of work, with open tickets.
