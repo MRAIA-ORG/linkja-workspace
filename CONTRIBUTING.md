@@ -79,7 +79,7 @@ cd ../linkja-core
 mvn install -DskipTests
 ```
 
-Use `-DskipTests` in linkja-core for now, because its tests cannot load the native linkja-crypto library yet (see Known gaps).
+Use `-DskipTests` in linkja-core, because its tests do not find the native linkja-crypto library by default (see Known gaps).
 
 ## Branches
 
@@ -261,7 +261,7 @@ Do these steps in this order. All of them are **release time, not run here**, ex
    mvn deploy -DskipTests
    ```
 
-   `-DskipTests` is necessary for linkja-core, because its tests cannot load the native library yet (see Known gaps).
+   linkja-core needs `-DskipTests` here, unless you give its tests the native library (see Known gaps).
 
    `mvn deploy` overwrites a version that is already in linkja-mvn-repo and does not warn you. Check that the version is new before you run it.
 
@@ -286,8 +286,15 @@ Do these steps in this order. All of them are **release time, not run here**, ex
 
 These were true when this file was written. Each one is a separate piece of work.
 
-- The poms carry release versions (e.g. `1.1.0`) on `develop`. The `-SNAPSHOT` flow above starts when a PR sets the first `-SNAPSHOT` version.
-- The programs download linkja-core and linkja-crypto from `https://raw.github.com/linkja/linkja-mvn-repo/master`, the old organization.
-- The linkja-core tests load the native linkja-crypto library from `linkja-core/lib`. That folder has no library in it.
-  Until a build puts it there, `mvn install` in linkja-core fails. Use `mvn install -DskipTests`.
-  On `develop`, the native library does not compile with Apple clang. A declaration in `linkja-crypto.h` does not match `linkja-crypto.c`.
+- On `develop`, only linkja-core carries a `-SNAPSHOT` version. The other four code repos carry release versions (e.g. `1.0.1` in linkja-crypto).
+  In each of those repos, the `-SNAPSHOT` flow above starts when a PR sets its first `-SNAPSHOT` version.
+- By default, the linkja-core tests load the native linkja-crypto library from `linkja-core/lib`. That folder has no library in it.
+  So `mvn install` in linkja-core fails. Use `mvn install -DskipTests`, or compile the library and give its folder to the tests:
+
+  ```sh
+  cd linkja-crypto
+  cmake . -DINCLUDE_SECRETS=OFF -DCMAKE_BUILD_TYPE=Release
+  make linkjacrypto
+  cd ../linkja-core
+  mvn install -Dnative.lib.dir="$PWD/../linkja-crypto/target"
+  ```
