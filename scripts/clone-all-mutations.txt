@@ -1,0 +1,15 @@
+# Recorded mutations of clone-all.sh. test-clone-all-mutations.sh applies each one
+# to a copy and requires test-clone-all.sh to exit nonzero with the expected FAIL text.
+# Add a line only when a ticket or a review proves that the test must catch that defect.
+# Fields, separated by one tab:
+#   label     what the mutation breaks
+#   source    mirror: clone from the local copies. default: use the default address in clone-all.sh.
+#   perl      a "perl -0pe" expression that changes clone-all.sh
+#   expect    text that must be in a "FAIL:" line of the test output
+#   proof     the ticket or PR that proved the test must catch it
+ahead branch deleted	mirror	s|  if \[ "\$ahead" -gt 0 \]; then\n.*\n  elif|  if|	second run exited non-zero	PR #60, ticket #27
+develop in linkja-core only	mirror	s|if git -C "\$parent/\$1" show-ref|if [ "\$1" = linkja-core ] && git -C "\$parent/\$1" show-ref|	linkja-crypto is not on develop	PR #60, ticket #27
+wrong default org	default	s|https://github.com/MRAIA-ORG}|https://github.com/no-such-org-zz9q}|	cannot mirror linkja-core	PR #60, ticket #27
+old linkja org as default	default	s|https://github.com/MRAIA-ORG}|https://github.com/linkja}|	cannot mirror linkja-workspace	PR #60, ticket #27
+fixed base after the base= line	mirror	s|^(base=.*)$|$1\nbase=https://github.com/MRAIA-ORG|m	was not cloned from	PR #60, ticket #59
+override name typo	mirror	s|LINKJA_GIT_BASE:-|LINKJA_GITBASE:-|	was not cloned from	PR #60, ticket #27

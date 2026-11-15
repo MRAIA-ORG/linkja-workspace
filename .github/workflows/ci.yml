@@ -1,0 +1,20 @@
+# Runs the clone-all.sh test and its recorded mutations, so a reviewer reads the result here.
+name: ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - name: Clone test and its mutations
+        run: scripts/test-clone-all-mutations.sh

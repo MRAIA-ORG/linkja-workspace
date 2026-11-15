@@ -68,6 +68,16 @@ The repo list is in `scripts/repos.txt`. To check the script itself, run the com
 linkja-workspace/scripts/test-clone-all.sh
 ```
 
+The `linux` job in `.github/workflows/ci.yml` runs this test on each push and pull request to `master`.
+The job also applies each mutation in `scripts/clone-all-mutations.txt` to a copy of `clone-all.sh`. The test must fail on each mutation with its expected text.
+To review a change to these scripts, read the result of that job. To run the same checks on your computer:
+
+```sh
+linkja-workspace/scripts/test-clone-all-mutations.sh
+```
+
+Add a mutation only when a ticket or a review proves that the test must catch it. Its last field names that ticket or PR.
+
 ### Install the libraries
 
 linkja-core needs the linkja-crypto jar in your local Maven repository (`~/.m2`). Install linkja-crypto first, then linkja-core:
