@@ -258,3 +258,23 @@ The open `lane` issues hold the tasks. List them with step 3 of Start here.
 - **Ticket 32, last box: copy the PR template into the 5 code repos, or add an org `.github` repo?**
 - **After ticket 59 merges: make its `linux` job a required check on `master`?**
 - Optional: overrule any decision Claude made above.
+
+## 2026-11-15 (night): CI in linkja-workspace, org PR template, old org links
+
+**What happened.** linkja-workspace has its first CI job, `linux`, which runs the clone test and its recorded mutations (PR 64). `linux` is a required check on `master`, with the same settings as the five code repos. A new public repo, MRAIA-ORG/.github, holds the org-wide PR template (MRAIA-ORG/.github PR 1). The old `linkja` org addresses are gone from linkja-matching, linkja-core and linkja-crypto (their PRs into `develop`). Tickets 32, 56 and 57 closed.
+
+**Decisions (owner, 2026-11-15).**
+- The PR template lives in an org-wide `MRAIA-ORG/.github` repo, so every repo with no template of its own gets it. Copies in each code repo were rejected: one edit would need five PRs.
+- `linux` is a required check on linkja-workspace `master`: PR required, admin bypass, 0 approvals.
+
+**Decisions Claude made, open to the owner's overrule.**
+- The mutation "old linkja org as default" stays in CI. It depends on the old org keeping its repos and never getting `linkja-workspace`. If that changes, the job fails on every PR. It is the only proof that the test rejects the old org.
+- The local clone of MRAIA-ORG/.github is at `~/code/linkja/mraia-org-github`. It is not in `scripts/repos.txt`, because nothing in the suite builds from it.
+
+**Traps.**
+- **A merge of a PR over 25 lines needs the review verdict as a PR comment first.** The `require-code-review` hook blocks `gh pr merge` until one exists.
+- **Ticket 59 has one open box.** A PR that applies one mutation must make the `linux` job fail. Nobody has shown that on GitHub yet.
+
+**Next.**
+
+The open `lane` issues hold the tasks. List them with step 3 of Start here.
