@@ -21,6 +21,7 @@ unset LINKJA_GIT_BASE
 echo "== test-clone-all.sh on clone-all.sh as it is"
 "$here/test-clone-all.sh" "$work/first" || { echo "FAIL: the test fails on clone-all.sh as it is"; exit 1; }
 copies="$work/first/mirrors"
+[ -d "$copies" ] || { echo "FAIL: no mirrors at $copies, so the mutations cannot use local copies"; exit 1; }
 
 # Some mutations ignore LINKJA_GIT_BASE and clone from the default address.
 # Send that address to the local copies, so these runs do not download the repos again.
@@ -28,12 +29,20 @@ GIT_CONFIG_COUNT=1
 GIT_CONFIG_KEY_0="url.$copies/.insteadOf"
 GIT_CONFIG_VALUE_0="$(sed -n 's/^base=.*:-\(.*\)}$/\1/p' "$here/clone-all.sh")/"
 export GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0
+[ "$GIT_CONFIG_VALUE_0" != / ] || { echo "FAIL: cannot read the default address from clone-all.sh"; exit 1; }
+# Gap: nothing proves that git uses this redirect. Without it, the runs still pass, only slower.
 
 tab=$(printf '\t')
 failed=0
 n=0
 while IFS=$tab read -r label source expr expect proof; do
   case $label in '' | '#'*) continue ;; esac
+  # A tab read collapses an empty field, so a missing field leaves the last one empty.
+  # An empty expect matches every FAIL line, so that check could never fail.
+  if [ -z "$source" ] || [ -z "$expr" ] || [ -z "$expect" ] || [ -z "$proof" ]; then
+    echo "FAIL: '$label' has an empty field. Each line needs 5 fields, separated by one tab." && exit 1
+  fi
+  case $source in mirror | default) ;; *) echo "FAIL: '$label' has the unknown source '$source'" && exit 1 ;; esac
   n=$((n + 1))
   run="$work/mutation-$n"
   mkdir "$run"
@@ -47,7 +56,6 @@ while IFS=$tab read -r label source expr expect proof; do
   case $source in
     mirror) LINKJA_GIT_BASE=$copies && export LINKJA_GIT_BASE ;;
     default) unset LINKJA_GIT_BASE ;;
-    *) echo "FAIL: '$label' has the unknown source '$source'" && exit 1 ;;
   esac
   echo "== mutation $n: $label"
   status=0
