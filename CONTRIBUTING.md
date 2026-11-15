@@ -91,10 +91,14 @@ Code repos have two long-lived branches:
 
 Support repos and this workspace repo have `master` only. Work goes into `master` by PR.
 
-Branch protection is not turned on yet. It waits for the CI job name of each repo ([linkja-workspace#9](https://github.com/MRAIA-ORG/linkja-workspace/issues/9)).
-Until then, GitHub lets anyone with write access push to `develop` and `master`. Do not do it. Use a PR.
+Branch protection is on for `develop` and `master` in the five code repos ([linkja-workspace#9](https://github.com/MRAIA-ORG/linkja-workspace/issues/9)).
+A change needs a PR, and the CI check `linux` must pass. No approval is required.
+An admin can bypass both rules and push directly. Use a PR anyway.
+Check the settings of one repo:
 
-When protection is on, `develop` and `master` will require a PR and passing CI. An admin can bypass this.
+```sh
+gh api repos/MRAIA-ORG/linkja-core/branches/develop/protection --jq '{checks: .required_status_checks.contexts, admins_enforced: .enforce_admins.enabled}'
+```
 
 ## Make a change
 
@@ -114,9 +118,9 @@ When protection is on, `develop` and `master` will require a PR and passing CI. 
    ```
 
 4. Fill in the PR template. It asks for the change and its reason, the issue, the commands you ran, and the review.
-5. When the repo has CI, it must pass. No code repo has CI yet (see Known gaps).
+5. In the five code repos, the CI check `linux` must pass. Support repos and this workspace repo have no CI.
 6. Get a review from someone who did not write the change. The person who merges checks that this happened.
-   Branch protection ([linkja-workspace#9](https://github.com/MRAIA-ORG/linkja-workspace/issues/9)) will require CI and no approvals, so this rule stays with people.
+   Branch protection requires CI and no approvals, so this rule stays with people.
    Fix what the review finds and get the fix reviewed too.
 7. Squash-merge.
 
@@ -223,8 +227,10 @@ Do these steps in this order. All of them are **release time, not run here**, ex
 
    ```sh
    gh pr create --base master --head develop --title "chore(release): v1.2.0"
-   gh pr merge --merge
+   gh pr checks develop --watch && gh pr merge develop --merge
    ```
+
+   If `gh pr checks` prints `no checks reported`, CI has not started yet. Wait a minute and run the line again.
 
 3. Tag the merge on `master` and push the tag:
 
@@ -272,4 +278,3 @@ These were true when this file was written. Each one is a separate piece of work
 - The linkja-core tests load the native linkja-crypto library from `linkja-core/lib`. That folder has no library in it.
   Until a build puts it there, `mvn install` in linkja-core fails. Use `mvn install -DskipTests`.
   On `develop`, the native library does not compile with Apple clang. A declaration in `linkja-crypto.h` does not match `linkja-crypto.c`.
-- No code repo has CI yet. [linkja-workspace#2](https://github.com/MRAIA-ORG/linkja-workspace/issues/2) and #4 to #7 add one Linux CI job per repo.
