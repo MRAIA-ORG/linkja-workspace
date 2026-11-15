@@ -216,7 +216,7 @@ Recount open tickets: `gh issue list -R MRAIA-ORG/linkja-workspace --state open`
 **Traps.**
 - **Larry Lemmon (`llemmon`) is not a collaborator on the five code repos.** The ticket 9 comment says he pushes to `develop`. He cannot push at all today. Jonathan Carr pushes as `rainercarr` (admin). His older account `jonathancarrcch` is not a collaborator either. On a public repo, the permission API answers `read` for any user, so use the collaborator list. Recount: `gh api repos/MRAIA-ORG/linkja-core/collaborators --jq '.[] | "\(.login) \(.role_name)"'`.
 - **`gh issue comment` has no `--jq` flag.** With `2>/dev/null` the failure was silent, and the owner decision did not reach ticket 37 until a reviewer found it missing. Never hide the error output of a write.
-- **A handoff pass must collect notes from all repos.** The lane issues live here, but the work merges in the code repos too. Run the pass's `gh pr list` with `-R MRAIA-ORG/<repo>` for each repo in `scripts/repos.txt`. The code repos have no PR template, so their PR bodies carry a `## Handoff notes` section only when the author writes one.
+- **A handoff pass must collect notes from all repos.** The lane issues live here, but the work merges in the code repos too. Run the pass's `gh pr list` with `-R MRAIA-ORG/<repo>` for each repo in `scripts/repos.txt`. The code repos have no PR template, so their PR bodies carry a `## Handoff notes` section only when the author writes one. (Superseded 2026-11-15 night: the code repos get the org template from MRAIA-ORG/.github.)
 - **zsh treats a word that starts with `=` as a command path.** `echo =====` fails with "not found". Quote it.
 - **A required check on a branch with no CI file.** `master` of the code repos has no `ci.yml`. A release PR from `develop` gets `linux` from its merge commit. A hotfix branch cut from `master` would never get `linux`, so only an admin could merge it. CONTRIBUTING has no hotfix flow.
 
@@ -255,25 +255,24 @@ The open `lane` issues hold the tasks. List them with step 3 of Start here. Each
 The open `lane` issues hold the tasks. List them with step 3 of Start here.
 
 **Waits on the owner.**
-- **Ticket 32, last box: copy the PR template into the 5 code repos, or add an org `.github` repo?**
-- **After ticket 59 merges: make its `linux` job a required check on `master`?**
+- Ticket 32, last box: copy the PR template into the 5 code repos, or add an org `.github` repo? (Answered 2026-11-15 night: the org repo.)
+- After ticket 59 merges: make its `linux` job a required check on `master`? (Answered 2026-11-15 night: yes.)
 - Optional: overrule any decision Claude made above.
 
 ## 2026-11-15 (night): CI in linkja-workspace, org PR template, old org links
 
-**What happened.** linkja-workspace has its first CI job, `linux`, which runs the clone test and its recorded mutations (PR 64). `linux` is a required check on `master`, with the same settings as the five code repos. A new public repo, MRAIA-ORG/.github, holds the org-wide PR template (MRAIA-ORG/.github PR 1). The old `linkja` org addresses are gone from linkja-matching, linkja-core and linkja-crypto (their PRs into `develop`). Tickets 32, 56 and 57 closed.
+**What happened.** linkja-workspace has its first CI job, `linux`, which runs the clone test and its recorded mutations (PR 64). `linux` is a required check on `master`, with the same settings as the five code repos. A new public repo, MRAIA-ORG/.github, holds the org-wide PR template (MRAIA-ORG/.github PR 1). The `github.com/linkja` addresses that ticket 57 named are gone from linkja-matching, linkja-core and linkja-crypto (their PRs into `develop`). The pom `<url>` of linkja-core and linkja-crypto still names `https://linkja.github.io/` (ticket 68). A throwaway PR (PR 67, closed unmerged) applied one recorded mutation, and the `linux` job failed. Tickets 32, 56, 57 and 59 closed.
 
 **Decisions (owner, 2026-11-15).**
-- The PR template lives in an org-wide `MRAIA-ORG/.github` repo, so every repo with no template of its own gets it. Copies in each code repo were rejected: one edit would need five PRs.
+- The PR template lives in an org-wide `MRAIA-ORG/.github` repo, so every repo with no template of its own gets it.
 - `linux` is a required check on linkja-workspace `master`: PR required, admin bypass, 0 approvals.
 
 **Decisions Claude made, open to the owner's overrule.**
 - The mutation "old linkja org as default" stays in CI. It depends on the old org keeping its repos and never getting `linkja-workspace`. If that changes, the job fails on every PR. It is the only proof that the test rejects the old org.
-- The local clone of MRAIA-ORG/.github is at `~/code/linkja/mraia-org-github`. It is not in `scripts/repos.txt`, because nothing in the suite builds from it.
+- The local clone of MRAIA-ORG/.github is at `~/code/linkja/mraia-org-github`. It is not in `scripts/repos.txt`, because nothing in the suite builds from it. So a handoff pass must list its PRs by hand: `gh pr list -R MRAIA-ORG/.github --state merged`.
 
 **Traps.**
-- **A merge of a PR over 25 lines needs the review verdict as a PR comment first.** The `require-code-review` hook blocks `gh pr merge` until one exists.
-- **Ticket 59 has one open box.** A PR that applies one mutation must make the `linux` job fail. Nobody has shown that on GitHub yet.
+- **The `require-code-review` hook guards only some files.** It counts lines in `.py`, `.yml`, `.yaml`, `.toml`, `.cfg`, `.sh`, `.ts` and `.js` files, and blocks `gh pr merge` at 25 or more with no review. A docs, Java or `pom.xml` PR passes it unreviewed. Review those by the rule, not by the hook.
 
 **Next.**
 
