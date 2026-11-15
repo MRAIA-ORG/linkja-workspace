@@ -84,6 +84,12 @@ linkja-workspace/scripts/test-clone-all-mutations.sh --check linkja-workspace/sc
 ```
 
 The recorded cases for the data file and the runner loop are in `linkja-workspace/scripts/test-mutations-data.sh`.
+The mutation gate for the runner itself is `linkja-workspace/scripts/test-runner-mutations.sh`. Its entries are in `linkja-workspace/scripts/runner-mutations.txt`.
+A new branch in `test-clone-all-mutations.sh` needs a new entry there, and a case that kills it.
+
+```sh
+linkja-workspace/scripts/test-runner-mutations.sh
+```
 
 ### Install the libraries
 

@@ -1,0 +1,17 @@
+# Recorded mutations of test-clone-all-mutations.sh. test-runner-mutations.sh applies
+# each one to a copy and requires test-mutations-data.sh to exit nonzero on that copy.
+# Add a line when a ticket or a review proves that the data cases must catch that defect.
+# A new branch in the runner needs a new line here.
+# Fields, separated by one tab:
+#   label     what the mutation breaks
+#   perl      a "perl -0pe" expression that changes test-clone-all-mutations.sh.
+#             Use {} as delimiters when the pattern has a "|".
+#   proof     the ticket or PR that proved the cases must catch it
+mutation not applied	s{^(\s*)perl -0pi}{$1continue\n$1perl -0pi}m	PR #72 review, ticket #71
+test call runs the unmutated copy	s{"\$run/test-clone-all.sh" 2>&1}{"\$here/test-clone-all.sh" 2>&1}	PR #72 review, ticket #71
+no exit after --check	s{(mutation lines"\n)  exit 0\n}{$1}	PR #72 review, ticket #71
+last line without newline skipped	s{ \|\| \[ -n "\$label" \]}{}	PR #72 review, ticket #71
+awk skips lines that start with a space	s{/\^#/ \|\|}{/^[# ]/ ||}	PR #72 review, ticket #71
+caught check reads only the exit status	s{(\[ "\$status" -ne 0 \]) && printf .*?grep -qF "\$expect";}{$1;}	PR #72 review round 3, ticket #71
+no continue after changes nothing	s{(changes nothing in clone-all.sh"\n\s*failed=1\n)\s*continue\n}{$1}	PR #72 review round 4, ticket #71
+caught check accepts expect text outside a FAIL line	s{grep '\^FAIL: ' \| }{}	ticket #71

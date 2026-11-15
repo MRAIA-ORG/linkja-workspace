@@ -18,7 +18,7 @@ dir="$work/stubs"
 mkdir "$dir"
 cp "$here/test-clone-all-mutations.sh" "$dir/"
 # shellcheck disable=SC2016 # the stub expands its variables when it runs
-printf '#!/bin/sh\nif grep -q klone "$(dirname "$0")/clone-all.sh"; then echo "FAIL: stub test saw klone"; exit 1; fi\nif [ -n "${1-}" ]; then mkdir -p "$1/mirrors"; fi\n' > "$dir/test-clone-all.sh"
+printf '#!/bin/sh\necho "note: stub test ran"\nif grep -q klone "$(dirname "$0")/clone-all.sh"; then echo "FAIL: stub test saw klone"; exit 1; fi\nif [ -n "${1-}" ]; then mkdir -p "$1/mirrors"; fi\n' > "$dir/test-clone-all.sh"
 # shellcheck disable=SC2016 # the runner reads the default address from this line
 printf 'base=${LINKJA_GIT_BASE:-https://example.invalid/org}\necho clone\n' > "$dir/clone-all.sh"
 : > "$dir/repos.txt"
@@ -41,17 +41,19 @@ check() {
   fi
 }
 
-# full NAME WANT_EXIT WANT_TEXT DATA: runs the runner copy with no --check.
-# The stub test fails only when the clone-all.sh next to it has the mutated
-# text "klone", so a mutation is caught only when the runner tests the mutated
-# copy. Each mutation must print its own "caught:" line.
+# full NAME WANT_EXIT WANT_TEXT DATA CAUGHT [NOT_TEXT]: runs the runner copy
+# with no --check. The stub test fails only when the clone-all.sh next to it
+# has the mutated text "klone", so a mutation is caught only when the runner
+# tests the mutated copy. Each mutation must print its own "caught:" line.
+# The output must have CAUGHT such lines, and must not have NOT_TEXT.
 full() {
   # shellcheck disable=SC2059 # the case text is the format, as in check
   printf "$4" > "$dir/clone-all-mutations.txt"
   status=0
   out=$(sh "$dir/test-clone-all-mutations.sh" 2>&1 </dev/null) || status=$?
   caught=$(printf '%s\n' "$out" | grep -c '^caught: ') || true
-  if [ $(($2 != 0)) -eq $((status != 0)) ] && printf '%s\n' "$out" | grep -qF "$3" && [ "$caught" -eq "$5" ]; then
+  if [ $(($2 != 0)) -eq $((status != 0)) ] && printf '%s\n' "$out" | grep -qF "$3" && [ "$caught" -eq "$5" ] &&
+    { [ -z "${6-}" ] || ! printf '%s\n' "$out" | grep -qF "$6"; }; then
     echo "ok: $1"
   else
     echo "FAIL: $1. Want exit $2, '$3' and $5 caught lines. Got exit $status, $caught caught lines: $out"
@@ -74,6 +76,9 @@ check 'label that starts with a space' 0 'OK: 1 mutation lines' ' lead\tmirror\t
 
 run='\tmirror\ts|clone|klone|\tstub test saw klone\tPR #1'
 full 'full run: last line without newline' 0 'PASS: all 2 mutations caught' "a$run\nb$run" 2
+full 'expect text the stub never prints' 1 'not caught' 'a\tmirror\ts|clone|klone|\tnever printed\tPR #1\n' 0
+full 'expect text only outside a FAIL line' 1 'not caught' 'a\tmirror\ts|clone|klone|\tstub test ran\tPR #1\n' 0
+full 'mutation that changes nothing is not run' 1 'changes nothing in clone-all.sh' 'a\tmirror\ts|no such text|x|\tsome text\tPR #1\n' 0 '== mutation'
 
 [ "$failed" -eq 0 ] || exit 1
 echo "PASS: all data cases"
