@@ -156,7 +156,7 @@ Older files that indent another way:
 - linkja-matching: `BinaryFileBuffer.java` uses 4 spaces. `ExternalSort.java`, `GlobalMatchSqlite.java` and `GlobalMatchTasks.java` use tabs.
 
 In linkja-matching, `ExternalSort.java`, `GlobalMatchTasks.java`, `BinaryFileBuffer.java`, `StringSizeEstimator.java` and `src/main/resources/GlobalMatchDDL-v2.txt` have CRLF line ends. `GlobalMatchSqlite.java` has LF line ends.
-`GlobalMatchTasks.java` has trailing spaces. `BinaryFileBuffer.java` and `StringSizeEstimator.java` have no newline at the end of the file.
+`GlobalMatchTasks.java` has trailing spaces. Line 72 of `GlobalMatchDDL-v2.txt` ends in a space. `BinaryFileBuffer.java` and `StringSizeEstimator.java` have no newline at the end of the file.
 Keep them as they are. When you copy `.editorconfig` into linkja-matching, add these sections at the end, so that an editor does not rewrite those files:
 
 ```ini
@@ -176,6 +176,7 @@ insert_final_newline = false
 
 [src/main/resources/GlobalMatchDDL-v2.txt]
 end_of_line = crlf
+trim_trailing_whitespace = false
 ```
 
 Three more repos have files with CRLF line ends. Keep them as they are. When you copy `.editorconfig` into one of these repos, add its section at the end.
