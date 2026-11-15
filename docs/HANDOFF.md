@@ -216,11 +216,11 @@ Recount open tickets: `gh issue list -R MRAIA-ORG/linkja-workspace --state open`
 **Traps.**
 - **Larry Lemmon (`llemmon`) is not a collaborator on the five code repos.** The ticket 9 comment says he pushes to `develop`. He cannot push at all today. Jonathan Carr pushes as `rainercarr` (admin). His older account `jonathancarrcch` is not a collaborator either. On a public repo, the permission API answers `read` for any user, so use the collaborator list. Recount: `gh api repos/MRAIA-ORG/linkja-core/collaborators --jq '.[] | "\(.login) \(.role_name)"'`.
 - **`gh issue comment` has no `--jq` flag.** With `2>/dev/null` the failure was silent, and the owner decision did not reach ticket 37 until a reviewer found it missing. Never hide the error output of a write.
-- **A handoff pass must collect notes from all repos.** The lane issues live here, but the work merges in the code repos too. Run the pass's `gh pr list` with `-R MRAIA-ORG/<repo>` for each repo in `scripts/repos.txt`. The code repos have no PR template, so their PR bodies carry a `## Handoff notes` section only when the author writes one. (Superseded 2026-11-15 night: the code repos get the org template from MRAIA-ORG/.github.)
+- **A handoff pass must collect notes from all repos.** The lane issues live here, but the work merges in the code repos too. Run the pass's `gh pr list` with `-R MRAIA-ORG/<repo>` for each repo in `scripts/repos.txt`. The code repos have no PR template, so their PR bodies carry a `## Handoff notes` section only when the author writes one. (Last sentence superseded 2026-11-15 night: the code repos get the org template from MRAIA-ORG/.github. A PR made with `gh pr create --body` still skips the template, so the rest of this trap holds.)
 - **zsh treats a word that starts with `=` as a command path.** `echo =====` fails with "not found". Quote it.
 - **A required check on a branch with no CI file.** `master` of the code repos has no `ci.yml`. A release PR from `develop` gets `linux` from its merge commit. A hotfix branch cut from `master` would never get `linux`, so only an admin could merge it. CONTRIBUTING has no hotfix flow.
 
-**Deliberately not done.** No PR template in the five code repos. No release yet: the first `mvn deploy` waits on the owner (releases lane).
+**Deliberately not done.** No PR template in the five code repos (superseded 2026-11-15 night: the org template in MRAIA-ORG/.github covers them). No release yet: the first `mvn deploy` waits on the owner (releases lane).
 
 **Next.**
 
@@ -240,7 +240,7 @@ The open `lane` issues hold the tasks. List them with step 3 of Start here. Each
 
 **Decisions Claude made, open to the owner's overrule.**
 - PR 60 merged with no CI and no branch protection on `master`, after three independent review rounds. Earlier PRs in this repo merged the same way. Ticket 59 adds the first CI job.
-- Ticket 32's last box (copy the PR template into the 5 code repos) stays open. The earlier handoff left it undone on purpose.
+- Ticket 32's last box (copy the PR template into the 5 code repos) stays open. The earlier handoff left it undone on purpose. (Superseded 2026-11-15 night: the owner chose the org `.github` repo, and ticket 32 closed.)
 - The new clone test makes local mirrors and points each mirror's default branch away from `develop`. On GitHub, `develop` is the default branch of every repo that has it. So a plain clone cannot show whether `clone-all.sh` checks out `develop` itself.
 
 **Traps.**
@@ -272,8 +272,30 @@ The open `lane` issues hold the tasks. List them with step 3 of Start here.
 - The local clone of MRAIA-ORG/.github is at `~/code/linkja/mraia-org-github`. It is not in `scripts/repos.txt`, because nothing in the suite builds from it. So a handoff pass must list its PRs by hand: `gh pr list -R MRAIA-ORG/.github --state merged`.
 
 **Traps.**
-- **The `require-code-review` hook guards only some files.** It counts lines in `.py`, `.yml`, `.yaml`, `.toml`, `.cfg`, `.sh`, `.ts` and `.js` files, and blocks `gh pr merge` at 25 or more with no review. A docs, Java or `pom.xml` PR passes it unreviewed. Review those by the rule, not by the hook.
+- **The `require-code-review` hook guards only some files.** It counts lines in `.py`, `.yml`, `.yaml`, `.toml`, `.cfg`, `.sh`, `.ts` and `.js` files, and blocks `gh pr merge` at 25 or more with no review. A docs, Java or `pom.xml` PR passes it unreviewed. Review those by hand.
 
 **Next.**
 
 The open `lane` issues hold the tasks. List them with step 3 of Start here.
+
+## 2026-11-15 (late): one PR template, mutation runner checks its data
+
+**What happened.** The org PR template now writes a lane as `MRAIA-ORG/linkja-workspace#<N>` in a code repo and `#<N>` in linkja-workspace (MRAIA-ORG/.github PR 2). linkja-workspace deleted its own copy and uses the org template (PR 70). Ticket 65 stays open for one box: the next code repo PR must show the template. The mutation runner checks every line of `scripts/clone-all-mutations.txt` before it clones, and reads a last line with no newline (PR 72, ticket 63). `scripts/test-mutations-data.sh` holds its recorded cases, offline. The handoff PR 66 was reviewed and merged. Ticket 59 closed after a throwaway PR proved the `linux` job fails on a broken script.
+
+**Decisions Claude made, open to the owner's overrule.**
+- Only a linkja-workspace PR can close a lane by itself. A code repo PR that finishes a lane writes `Lane: MRAIA-ORG/linkja-workspace#<N>. finished`, and the handoff pass lists it for the owner. The handoff skill accepts only `Lane: #<N>. finished`. Changing the skill was left to the owner.
+- Ticket 63 merged after its third round still had one blocking finding. That finding is a runner check that is the same on `master`, outside the ticket. Three rounds each found one new untested runner branch, so the work was scoped back to the ticket and the pattern became housekeeping ticket 71. A fourth, independent round judged that call and passed.
+- MRAIA-ORG/.github PR 2 merged with no CI, because that repo has none. Three review rounds checked it.
+
+**Traps.**
+- **Tests of the mutation runner must stay offline.** Reviewers and fixers started real GitHub clone runs, and once a self-calling `sh` loop. Run cases only through `scripts/test-mutations-data.sh`, which copies the runner beside stubs. Put a 60-second limit on each run. Use `{}` as perl delimiters when the pattern has `|`.
+- **The merge hook checks for the review comment before the command runs.** A verdict comment and `gh pr merge` in one Bash call is blocked. Post the comment in its own call.
+- **`gh pr merge` once returned 401 with valid auth.** A second try worked. Check `gh pr view <N> --json state` before you retry.
+
+**Next.**
+
+The open `lane` issues hold the tasks. List them with step 3 of Start here.
+
+**Waits on the owner.**
+- **Must a code repo PR close a lane by itself?** Then the yw-workflow handoff skill must accept `Lane: MRAIA-ORG/linkja-workspace#<N>. finished`.
+- Optional: overrule any decision Claude made above.
