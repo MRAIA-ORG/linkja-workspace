@@ -62,7 +62,7 @@ Run the same script again at any time to update. For each repo it:
 - skips the repo and says so if it has local changes (staged, unstaged or untracked files),
 - fetches only, and says so, if the branch has local commits or no upstream.
 
-The repo list is in `scripts/repos.txt`. To check the script itself, run the command below. It makes local mirrors of the GitHub repos in a new temp folder and clones from them. It deletes the folder when it stops. Give a folder as the argument to keep it.
+The repo list is in `scripts/repos.txt`. To check the script itself, run the command below. It makes local mirrors of the GitHub repos in a new temp folder and clones from them. It deletes the folder when it stops. Give a new, empty folder as the argument to keep it.
 
 ```sh
 linkja-workspace/scripts/test-clone-all.sh
