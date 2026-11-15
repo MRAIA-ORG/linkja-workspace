@@ -222,7 +222,9 @@ The code repos use SemVer (`MAJOR.MINOR.PATCH`). Pick the next number by the lar
 - Minor: a new function that keeps old code working.
 - Patch: fixes only.
 
-Between releases, `develop` carries the next version with `-SNAPSHOT`, e.g. `2.0.0-SNAPSHOT`. After a release, it gets the next patch version (step 6). When a PR brings a minor or major change into `develop`, that PR also raises the `-SNAPSHOT` version. Decided by the owner on 2026-11-15 ([linkja-workspace#37](https://github.com/MRAIA-ORG/linkja-workspace/issues/37)).
+The owner decided this rule on 2026-11-15 ([linkja-workspace#37](https://github.com/MRAIA-ORG/linkja-workspace/issues/37)).
+
+Between releases, `develop` carries the next version with `-SNAPSHOT`, e.g. `2.0.0-SNAPSHOT`. After a release, it gets the next patch version (step 6). When a PR brings a minor or major change into `develop`, that PR also raises the `-SNAPSHOT` version.
 
 ### Steps
 
