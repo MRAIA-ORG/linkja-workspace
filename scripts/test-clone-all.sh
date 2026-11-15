@@ -12,12 +12,13 @@ set -eu
 here=$(cd "$(dirname "$0")" && pwd)
 temp_note=
 if [ $# -gt 0 ]; then
-  dir=$1
+  mkdir -p "$1"
+  dir=$(cd "$1" && pwd)
 else
   dir=$(mktemp -d)
   trap 'rm -rf "$dir"' EXIT
   trap 'exit 1' INT TERM
-  temp_note="The temp folder $dir is deleted. Give a folder as the argument to keep it."
+  temp_note="The temp folder $dir is deleted. Give a new, empty folder as the argument to keep it."
 fi
 fail() {
   echo "FAIL: $*"
@@ -30,6 +31,10 @@ fail() {
 # test sees whether clone-all.sh checks out develop itself.
 # The mirrors come from the default address in clone-all.sh. A wrong default
 # fails here, because the address must hold every repo in repos.txt, linkja-workspace too.
+# This check has two limits. It reads the default from the text of clone-all.sh
+# and does not run it. A LINKJA_GIT_BASE that you set skips the default.
+# The old linkja org has every repo except linkja-workspace, so the list must keep it.
+grep -qx linkja-workspace "$here/repos.txt" || fail "repos.txt does not list linkja-workspace"
 default=$(sed -n 's/^base=.*:-\(.*\)}$/\1/p' "$here/clone-all.sh")
 [ -n "$default" ] || fail "no default address found in clone-all.sh"
 src=${LINKJA_GIT_BASE:-$default}
