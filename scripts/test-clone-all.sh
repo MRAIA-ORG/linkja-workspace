@@ -10,23 +10,33 @@
 set -eu
 
 here=$(cd "$(dirname "$0")" && pwd)
+temp_note=
 if [ $# -gt 0 ]; then
   dir=$1
 else
   dir=$(mktemp -d)
   trap 'rm -rf "$dir"' EXIT
   trap 'exit 1' INT TERM
+  temp_note="The temp folder $dir is deleted. Give a folder as the argument to keep it."
 fi
-fail() { echo "FAIL: $*"; exit 1; }
+fail() {
+  echo "FAIL: $*"
+  [ -z "$temp_note" ] || echo "$temp_note"
+  exit 1
+}
 
 # On GitHub, develop is the default branch of every repo that has it, so a plain
 # clone is on develop anyway. The mirrors point HEAD at another branch, so the
 # test sees whether clone-all.sh checks out develop itself.
-src=${LINKJA_GIT_BASE:-https://github.com/MRAIA-ORG}
+# The mirrors come from the default address in clone-all.sh. A wrong default
+# fails here, because the address must hold every repo in repos.txt, linkja-workspace too.
+default=$(sed -n 's/^base=.*:-\(.*\)}$/\1/p' "$here/clone-all.sh")
+[ -n "$default" ] || fail "no default address found in clone-all.sh"
+src=${LINKJA_GIT_BASE:-$default}
 echo "== mirroring the repos from $src into $dir/mirrors"
 while read -r repo; do
   mirror="$dir/mirrors/$repo.git"
-  git clone --quiet --mirror "$src/$repo.git" "$mirror"
+  git clone --quiet --mirror "$src/$repo.git" "$mirror" || fail "cannot mirror $repo from $src"
   if git -C "$mirror" show-ref --verify --quiet refs/heads/develop; then
     other=$(git -C "$mirror" for-each-ref --format='%(refname)' refs/heads | grep -vx refs/heads/develop | head -n 1)
     git -C "$mirror" symbolic-ref HEAD "$other"
@@ -40,6 +50,8 @@ echo "== first run into $dir"
 
 while read -r repo; do
   [ -d "$dir/$repo/.git" ] || fail "$repo was not cloned"
+  [ "$(git -C "$dir/$repo" remote get-url origin)" = "$LINKJA_GIT_BASE/$repo.git" ] \
+    || fail "$repo was not cloned from $LINKJA_GIT_BASE"
   if git -C "$dir/$repo" show-ref --verify --quiet refs/remotes/origin/develop; then
     want=develop
   else

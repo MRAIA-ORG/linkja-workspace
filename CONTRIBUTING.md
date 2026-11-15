@@ -62,7 +62,7 @@ Run the same script again at any time to update. For each repo it:
 - skips the repo and says so if it has local changes (staged, unstaged or untracked files),
 - fetches only, and says so, if the branch has local commits or no upstream.
 
-The repo list is in `scripts/repos.txt`. To check the script itself (it clones from GitHub into a new temp folder):
+The repo list is in `scripts/repos.txt`. To check the script itself, run the command below. It makes local mirrors of the GitHub repos in a new temp folder and clones from them. It deletes the folder when it stops. Give a folder as the argument to keep it.
 
 ```sh
 linkja-workspace/scripts/test-clone-all.sh
@@ -201,7 +201,7 @@ linkja-test-data:
 end_of_line = crlf
 ```
 
-SQL-hashing gets no copy of `.editorconfig`. The repo is legacy and gets no work beyond its README. All of its `.bat` and `.sql` files, `config.txt`, and the sample files in `Log/` and `Output/` have CRLF line ends. The shared file would change them to LF.
+SQL-hashing gets no copy of `.editorconfig`. The repo is legacy and gets no work beyond its README. All of its `.bat` and `.sql` files, `config.txt`, `DecryptSourceCodes/include/openssl/opensslconf.h`, and the sample files in `Log/` and `Output/` have CRLF line ends. The shared file would change them to LF.
 
 ### C (linkja-crypto)
 
