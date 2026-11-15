@@ -18,5 +18,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
+      - name: Mutation data file checks
+        run: scripts/test-mutations-data.sh
       - name: Clone test and its mutations
         run: scripts/test-clone-all-mutations.sh
