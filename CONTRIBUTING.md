@@ -77,6 +77,11 @@ linkja-workspace/scripts/test-clone-all-mutations.sh
 ```
 
 Add a mutation only when a ticket or a review proves that the test must catch it. Its last field names that ticket or PR.
+Before a full run, check a new data line in seconds:
+
+```sh
+linkja-workspace/scripts/test-clone-all-mutations.sh --check linkja-workspace/scripts/clone-all-mutations.txt
+```
 
 ### Install the libraries
 
