@@ -233,15 +233,15 @@ The open `lane` issues hold the tasks. List them with step 3 of Start here. Each
 
 ## 2026-11-15 (evening): workspace docs lane merged
 
-**What happened.** The workspace docs lane merged its four tickets as one PR with one commit each, rebase-merged (PR 60): README links, Known gaps, CRLF files, and clone test cases. Three review rounds ran (its `Rounds:` line). The yw-workflow plugin changed too: the documenter agent has `Bash`, and the fresh-eye reviewer gets the author's source lines (yw-workflow PR 126).
+**What happened.** The workspace docs lane merged the work of four tickets in one rebase-merged PR (PR 60): README links, Known gaps, CRLF files, and clone test cases. Each ticket has one commit, plus two review fixes. Tickets 24, 25 and 27 closed. Ticket 32 stays open for one box. Three review rounds ran (its `Rounds:` line). Ticket 56 (keep a trailing space in `GlobalMatchDDL-v2.txt`) merged after (PR 61). The yw-workflow plugin changed too: the documenter agent has `Bash`, and the fresh-eye reviewer gets the author's source lines (yw-workflow PR 126).
 
 **Decisions (owner, 2026-11-15).**
-- Move the long, mechanical part of reviews (the clone test and its mutations) into GitHub Actions. The repos are public, so the minutes cost nothing. This is ticket 59.
+- Move the long, mechanical part of reviews (the clone test and its mutations) into GitHub Actions. This repo is public, so the minutes cost nothing. This is ticket 59.
 
 **Decisions Claude made, open to the owner's overrule.**
 - PR 60 merged with no CI and no branch protection on `master`, after three independent review rounds. Earlier PRs in this repo merged the same way. Ticket 59 adds the first CI job.
 - Ticket 32's last box (copy the PR template into the 5 code repos) stays open. The earlier handoff left it undone on purpose.
-- The new clone test makes local mirrors and points each mirror's default branch away from `develop`. On GitHub, `develop` is the default branch of every repo that has it, so a plain clone could not show whether `clone-all.sh` checks out `develop` itself.
+- The new clone test makes local mirrors and points each mirror's default branch away from `develop`. On GitHub, `develop` is the default branch of every repo that has it. So a plain clone cannot show whether `clone-all.sh` checks out `develop` itself.
 
 **Traps.**
 - **Agent-tool `isolation: "worktree"` fails from `~/code/linkja`.** That folder is not a git repo. Make reviewer worktrees by hand: `git -C <repo> worktree add --detach <path> <branch>`.
@@ -257,3 +257,4 @@ The open `lane` issues hold the tasks. List them with step 3 of Start here.
 **Waits on the owner.**
 - **Ticket 32, last box: copy the PR template into the 5 code repos, or add an org `.github` repo?**
 - **After ticket 59 merges: make its `linux` job a required check on `master`?**
+- Optional: overrule any decision Claude made above.
