@@ -288,9 +288,9 @@ The open `lane` issues hold the tasks. List them with step 3 of Start here.
 - MRAIA-ORG/.github PR 2 merged with no CI, because that repo has none. Three review rounds checked it.
 
 **Traps.**
-- **Tests of the mutation runner must stay offline.** Reviewers and fixers started real GitHub clone runs, and once a self-calling `sh` loop. Run cases only through `scripts/test-mutations-data.sh`, which copies the runner beside stubs. Put a 60-second limit on each run. Use `{}` as perl delimiters when the pattern has `|`.
+- **Tests of the mutation runner must stay offline.** Two reviewers and one fixer started real GitHub clone runs or a self-calling `sh` loop (PR 72 notes). Run cases only through `scripts/test-mutations-data.sh`, which copies the runner beside stubs. Use `{}` as perl delimiters when the pattern has `|`.
 - **The merge hook checks for the review comment before the command runs.** A verdict comment and `gh pr merge` in one Bash call is blocked. Post the comment in its own call.
-- **`gh pr merge` once returned 401 with valid auth.** A second try worked. Check `gh pr view <N> --json state` before you retry.
+- **`gh pr merge` once returned 401 with valid auth** (seen by this session on MRAIA-ORG/.github PR 2). A second try worked. Check `gh pr view <N> --json state` before you retry.
 
 **Next.**
 
