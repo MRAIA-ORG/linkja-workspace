@@ -128,7 +128,7 @@ gh api repos/MRAIA-ORG/linkja-core/branches/develop/protection --jq '{checks: .r
    ```
 
 4. Fill in the PR template. It asks for the change and its reason, the issue, the commands you ran, and the review.
-5. In the five code repos, the CI check `linux` must pass. Support repos and this workspace repo have no CI.
+5. In the five code repos and this workspace repo, the CI check `linux` must pass. Support repos have no CI.
 6. Get a review from someone who did not write the change. The person who merges checks that this happened.
    Branch protection requires CI and no approvals, so this rule stays with people.
    Fix what the review finds and get the fix reviewed too.
