@@ -4,10 +4,38 @@
 # nonzero and prints the expected FAIL text. Exits 1 when the first run fails
 # or a mutation is not caught.
 # Each mutation changes a copy of clone-all.sh. The file in the repo stays as it is.
-# Usage: scripts/test-clone-all-mutations.sh
+# Every data line is checked before any run. --check FILE only checks FILE.
+# Usage: scripts/test-clone-all-mutations.sh [--check FILE]
 set -eu
 
 here=$(cd "$(dirname "$0")" && pwd)
+data="$here/clone-all-mutations.txt"
+
+# Prints the number of mutation lines in $1, or one FAIL line and exits 1.
+# A line needs exactly 5 tab-separated fields. A blank field (e.g. an expect of
+# one space) matches almost every FAIL line, so that check could never fail.
+check_data() {
+  awk -F'\t' '
+    /^#/ || $0 == "" { next }
+    NF != 5 { printf "FAIL: %s line %d has %d fields, want 5 separated by one tab\n", FILENAME, FNR, NF; bad = 1; exit 1 }
+    {
+      split("label source perl expect proof", name, " ")
+      for (i = 1; i <= 5; i++)
+        if ($i ~ /^[ \t]*$/) { printf "FAIL: %s line %d: field %d (%s) is blank\n", FILENAME, FNR, i, name[i]; bad = 1; exit 1 }
+      if ($2 != "mirror" && $2 != "default") { printf "FAIL: %s line %d: unknown source '\''%s'\''\n", FILENAME, FNR, $2; bad = 1; exit 1 }
+      n++
+    }
+    END { if (bad) exit 1; if (!n) { printf "FAIL: no mutations in %s\n", FILENAME; exit 1 }; print n }
+  ' "$1"
+}
+
+if [ "${1-}" = --check ]; then
+  count=$(check_data "$2") || { printf '%s\n' "$count"; exit 1; }
+  echo "OK: $count mutation lines"
+  exit 0
+fi
+want=$(check_data "$data") || { printf '%s\n' "$want"; exit 1; }
+
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 trap 'exit 1' INT TERM
@@ -35,14 +63,9 @@ export GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0
 tab=$(printf '\t')
 failed=0
 n=0
-while IFS=$tab read -r label source expr expect proof; do
+# check_data has checked every line. The "|| [ -n ... ]" reads a last line with no newline.
+while IFS=$tab read -r label source expr expect proof || [ -n "$label" ]; do
   case $label in '' | '#'*) continue ;; esac
-  # A tab read collapses an empty field, so a missing field leaves the last one empty.
-  # An empty expect matches every FAIL line, so that check could never fail.
-  if [ -z "$source" ] || [ -z "$expr" ] || [ -z "$expect" ] || [ -z "$proof" ]; then
-    echo "FAIL: '$label' has an empty field. Each line needs 5 fields, separated by one tab." && exit 1
-  fi
-  case $source in mirror | default) ;; *) echo "FAIL: '$label' has the unknown source '$source'" && exit 1 ;; esac
   n=$((n + 1))
   run="$work/mutation-$n"
   mkdir "$run"
@@ -67,8 +90,8 @@ while IFS=$tab read -r label source expr expect proof; do
     echo "FAIL: '$label' ($proof) not caught. Want a nonzero exit and '$expect'. Got exit $status."
     failed=1
   fi
-done < "$here/clone-all-mutations.txt"
+done < "$data"
 
-[ "$n" -gt 0 ] || { echo "FAIL: no mutations in clone-all-mutations.txt"; exit 1; }
+[ "$n" -eq "$want" ] || { echo "FAIL: ran $n mutations, but clone-all-mutations.txt has $want"; exit 1; }
 [ "$failed" -eq 0 ] || exit 1
 echo "PASS: all $n mutations caught"
