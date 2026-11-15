@@ -22,5 +22,8 @@ Round 1:
 
 ## Handoff notes
 
-<!-- Decisions made, things left out on purpose and why, traps that cost time.
-Write "None" if there are none. -->
+Lane: #<lane issue>. <its next step>
+
+<!-- To close the lane, write exactly `Lane: #<N>. finished` with nothing after it.
+What the next session needs: decisions and why, traps that cost time, what was deliberately not done.
+The handoff pass copies this into `docs/HANDOFF.md` after merge. Lanes do not edit that file. -->
