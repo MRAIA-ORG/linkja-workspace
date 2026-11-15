@@ -171,7 +171,7 @@ Recount open tickets: `gh issue list -R MRAIA-ORG/linkja-workspace --state open`
 
 **Next.**
 
-**First task:** ticket 9 (branch protection on `develop` and `master` of the five code repos).
+**First task:** ticket 9 (branch protection on `develop` and `master` of the five code repos). Superseded 2026-11-15: done, see the 2026-11-15 section.
 - The required check is `linux` in each repo.
 - GitHub lists no open blocker for ticket 9. The "Blocked by" list in its body is out of date and still names ticket 2.
 - Read the owner's 2026-11-15 comment on ticket 9 first. It keeps `develop` plus `master`, and keeps admin bypass, because Jonathan Carr and Larry Lemmon push directly to `develop`. Admin bypass comes off only after they have used PRs with CI for a few weeks, and after the owner tells them.
@@ -193,12 +193,12 @@ Recount open tickets: `gh issue list -R MRAIA-ORG/linkja-workspace --state open`
 Recount open tickets: `gh issue list -R MRAIA-ORG/linkja-workspace --state open`. Agent-ready: `gh issue list -R MRAIA-ORG/linkja-workspace --label ready-for-agent`. See which can start: `gh api repos/MRAIA-ORG/linkja-workspace/issues/<n>/dependencies/blocked_by --jq '[.[] | select(.state=="open") | .number]'`.
 
 **Waits on the owner.**
-- **Ticket 37: pick the next linkja-core version (e.g. 1.2.0).** Needed before any deploy to linkja-mvn-repo. It also removes Bouncy Castle 1.61 from the program jars, and ticket 8 waits on it.
+- **Ticket 37: pick the next linkja-core version (e.g. 1.2.0).** Superseded 2026-11-15: the owner picked 2.0.0, see the 2026-11-15 section. Needed before any deploy to linkja-mvn-repo. It also removes Bouncy Castle 1.61 from the program jars, and ticket 8 waits on it.
 - Optional: overrule any decision Claude made above.
 
 ## 2026-11-15: branch protection on, linkja-core 2.0.0-SNAPSHOT, lanes
 
-**What happened.** The 2026-11-13 handoff merged after three more review rounds (PR 47). Branch protection is on for `develop` and `master` in the five code repos, and ticket 9 is closed (PR 48). linkja-core `develop` is `2.0.0-SNAPSHOT` (linkja-core PR 2), the first PR under the new protection: its `linux` check ran and passed. CONTRIBUTING has the version rule (PR 49). Each PR body has its `Rounds:` line and `## Review findings`. This pass moved the handoff to `lane` issues.
+**What happened.** The 2026-11-13 handoff merged after more review rounds (PR 47, its `Rounds:` line). Branch protection is on for `develop` and `master` in the five code repos, and ticket 9 is closed (PR 48). linkja-core `develop` is `2.0.0-SNAPSHOT` (linkja-core PR 2), the first PR under the new protection: its `linux` check ran and passed. CONTRIBUTING has the version rule (PR 49). Each PR body has its `Rounds:` line and `## Review findings`. This pass moved the handoff to `lane` issues.
 
 **Decisions (owner, 2026-11-15).**
 - Keep git flow and admin bypass (comment on ticket 9).
@@ -209,11 +209,12 @@ Recount open tickets: `gh issue list -R MRAIA-ORG/linkja-workspace --state open`
 
 **Decisions Claude made, open to the owner's overrule.**
 - Ticket 8 is now blocked by tickets 37 and 2 on GitHub, and ticket 43 by ticket 28. `ready-for-agent` came off ticket 8. Before this, the handoff's own command said Docker work could start.
-- The old clone at `/Users/yw1084/code/linkja-core` and two orca worktrees of this repo were deleted. None held unpushed or uncommitted work.
-- Five lanes split the open tickets: releases, C library, golden tests and design, workspace docs, follow-ups. No ticket is a task in two lanes.
+- The old clone at `/Users/yw1084/code/linkja-core` and the orca worktrees of this repo were deleted. None held unpushed or uncommitted work.
+- Lanes split the open tickets: releases, C library, golden tests and design, workspace docs, follow-ups. No ticket is a task in two lanes.
+- The GitHub link "#2 blocked by #1" was removed. #1 is the workspace setup, and it does not block a C library build.
 
 **Traps.**
-- **Larry Lemmon (`llemmon`) has `read` on all five code repos.** The ticket 9 comment says he pushes to `develop`. He cannot push at all today. Jonathan Carr pushes as `rainercarr` (admin). His older account `jonathancarrcch` has `read`. Recount: `gh api repos/MRAIA-ORG/linkja-core/collaborators --jq '.[] | "\(.login) \(.role_name)"'`.
+- **Larry Lemmon (`llemmon`) is not a collaborator on the five code repos.** The ticket 9 comment says he pushes to `develop`. He cannot push at all today. Jonathan Carr pushes as `rainercarr` (admin). His older account `jonathancarrcch` is not a collaborator either. On a public repo, the permission API answers `read` for any user, so use the collaborator list. Recount: `gh api repos/MRAIA-ORG/linkja-core/collaborators --jq '.[] | "\(.login) \(.role_name)"'`.
 - **`gh issue comment` has no `--jq` flag.** With `2>/dev/null` the failure was silent, and the owner decision did not reach ticket 37 until a reviewer found it missing. Never hide the error output of a write.
 - **A handoff pass must collect notes from all repos.** The lane issues live here, but the work merges in the code repos too. Run the pass's `gh pr list` with `-R MRAIA-ORG/<repo>` for each repo in `scripts/repos.txt`. The code repos have no PR template, so their PR bodies carry a `## Handoff notes` section only when the author writes one.
 - **zsh treats a word that starts with `=` as a command path.** `echo =====` fails with "not found". Quote it.
@@ -223,7 +224,7 @@ Recount open tickets: `gh issue list -R MRAIA-ORG/linkja-workspace --state open`
 
 **Next.**
 
-The open `lane` issues hold the tasks. List them with step 3 of Start here. Each lane's `## Next` marks its tasks `parallel` or `after`. Five lanes were opened today: releases, C library, golden tests and design, workspace docs, follow-ups.
+The open `lane` issues hold the tasks. List them with step 3 of Start here. Each lane's `## Next` marks its tasks `parallel` or `after`. The lanes opened today: releases, C library, golden tests and design, workspace docs, follow-ups.
 
 **Waits on the owner.**
 - **Approve the first `mvn deploy` to linkja-mvn-repo** (releases lane).
