@@ -11,13 +11,29 @@ work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 failed=0
 
+# Every case runs a copy of the runner next to stub files, so a runner that
+# goes past --check runs the stubs and clones nothing. The runner finds its
+# files in its own folder. The base run gets a folder and makes mirrors there.
+dir="$work/stubs"
+mkdir "$dir"
+cp "$here/test-clone-all-mutations.sh" "$dir/"
+# shellcheck disable=SC2016 # the stub expands its variables when it runs
+printf '#!/bin/sh\nif grep -q klone "$(dirname "$0")/clone-all.sh"; then echo "FAIL: stub test saw klone"; exit 1; fi\nif [ -n "${1-}" ]; then mkdir -p "$1/mirrors"; fi\n' > "$dir/test-clone-all.sh"
+# shellcheck disable=SC2016 # the runner reads the default address from this line
+printf 'base=${LINKJA_GIT_BASE:-https://example.invalid/org}\necho clone\n' > "$dir/clone-all.sh"
+: > "$dir/repos.txt"
+chmod +x "$dir/test-clone-all.sh"
+
 # check NAME WANT_EXIT WANT_TEXT DATA: DATA is a printf format for the whole file.
+# The case fails when the runner goes past --check.
 check() {
   # shellcheck disable=SC2059 # the case text is the format, so \t and \n become tabs and newlines
   printf "$4" > "$work/data"
   status=0
-  out=$("$here/test-clone-all-mutations.sh" --check "$work/data" 2>&1) || status=$?
-  if [ $(($2 != 0)) -eq $((status != 0)) ] && printf '%s\n' "$out" | grep -qF "$3"; then
+  out=$(sh "$dir/test-clone-all-mutations.sh" --check "$work/data" 2>&1 </dev/null) || status=$?
+  # The runner prints "== " only when it runs past --check into the full loop.
+  if [ $(($2 != 0)) -eq $((status != 0)) ] && printf '%s\n' "$out" | grep -qF "$3" &&
+    ! printf '%s\n' "$out" | grep -q '^== '; then
     echo "ok: $1"
   else
     echo "FAIL: $1. Want exit $2 and '$3'. Got exit $status: $out"
@@ -25,28 +41,20 @@ check() {
   fi
 }
 
-# full NAME WANT_EXIT WANT_TEXT DATA: runs a copy of the runner, with no --check,
-# next to stub files. The runner finds its files in its own folder. The stub test
-# makes the mirrors folder on the first run. It fails with a FAIL line on every
-# mutation run, so each mutation whose expect is in that line is caught.
+# full NAME WANT_EXIT WANT_TEXT DATA: runs the runner copy with no --check.
+# The stub test fails only when the clone-all.sh next to it has the mutated
+# text "klone", so a mutation is caught only when the runner tests the mutated
+# copy. Each mutation must print its own "caught:" line.
 full() {
-  dir="$work/full"
-  rm -rf "$dir" && mkdir "$dir"
-  cp "$here/test-clone-all-mutations.sh" "$dir/"
-  # shellcheck disable=SC2016 # the stub expands $1 when it runs
-  printf '#!/bin/sh\nif [ -n "${1-}" ]; then mkdir -p "$1/mirrors"; exit 0; fi\necho "FAIL: stub test"; exit 1\n' > "$dir/test-clone-all.sh"
-  # shellcheck disable=SC2016 # the runner reads the default address from this line
-  printf 'base=${LINKJA_GIT_BASE:-https://example.invalid/org}\necho clone\n' > "$dir/clone-all.sh"
-  : > "$dir/repos.txt"
-  chmod +x "$dir/test-clone-all.sh"
   # shellcheck disable=SC2059 # the case text is the format, as in check
   printf "$4" > "$dir/clone-all-mutations.txt"
   status=0
   out=$(sh "$dir/test-clone-all-mutations.sh" 2>&1 </dev/null) || status=$?
-  if [ $(($2 != 0)) -eq $((status != 0)) ] && printf '%s\n' "$out" | grep -qF "$3"; then
+  caught=$(printf '%s\n' "$out" | grep -c '^caught: ') || true
+  if [ $(($2 != 0)) -eq $((status != 0)) ] && printf '%s\n' "$out" | grep -qF "$3" && [ "$caught" -eq "$5" ]; then
     echo "ok: $1"
   else
-    echo "FAIL: $1. Want exit $2 and '$3'. Got exit $status: $out"
+    echo "FAIL: $1. Want exit $2, '$3' and $5 caught lines. Got exit $status, $caught caught lines: $out"
     failed=1
   fi
 }
@@ -64,8 +72,8 @@ check 'unknown source' 1 "line 1: unknown source 'mirorr'" 'a\tmirorr\ts|x|y|\ts
 check 'no mutations' 1 'no mutations in' '# only a comment\n'
 check 'label that starts with a space' 0 'OK: 1 mutation lines' ' lead\tmirror\ts|x|y|\tsome text\tPR #1\n'
 
-run='\tmirror\ts|clone|klone|\tstub test\tPR #1'
-full 'full run: last line without newline' 0 'PASS: all 2 mutations caught' "a$run\nb$run"
+run='\tmirror\ts|clone|klone|\tstub test saw klone\tPR #1'
+full 'full run: last line without newline' 0 'PASS: all 2 mutations caught' "a$run\nb$run" 2
 
 [ "$failed" -eq 0 ] || exit 1
 echo "PASS: all data cases"

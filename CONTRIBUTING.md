@@ -83,6 +83,8 @@ Before a full run, check a new data line in seconds:
 linkja-workspace/scripts/test-clone-all-mutations.sh --check linkja-workspace/scripts/clone-all-mutations.txt
 ```
 
+The recorded cases for the data file and the runner loop are in `linkja-workspace/scripts/test-mutations-data.sh`.
+
 ### Install the libraries
 
 linkja-core needs the linkja-crypto jar in your local Maven repository (`~/.m2`). Install linkja-crypto first, then linkja-core:
