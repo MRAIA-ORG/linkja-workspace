@@ -230,3 +230,30 @@ The open `lane` issues hold the tasks. List them with step 3 of Start here. Each
 - **Approve the first `mvn deploy` to linkja-mvn-repo** (releases lane).
 - **If Larry Lemmon must push, give him admin access.** Write access below admin lets branch protection stop his direct pushes.
 - Optional: overrule any decision Claude made above.
+
+## 2026-11-15 (evening): workspace docs lane merged
+
+**What happened.** The workspace docs lane merged its four tickets as one PR with one commit each, rebase-merged (PR 60): README links, Known gaps, CRLF files, and clone test cases. Three review rounds ran (its `Rounds:` line). The yw-workflow plugin changed too: the documenter agent has `Bash`, and the fresh-eye reviewer gets the author's source lines (yw-workflow PR 126).
+
+**Decisions (owner, 2026-11-15).**
+- Move the long, mechanical part of reviews (the clone test and its mutations) into GitHub Actions. The repos are public, so the minutes cost nothing. This is ticket 59.
+
+**Decisions Claude made, open to the owner's overrule.**
+- PR 60 merged with no CI and no branch protection on `master`, after three independent review rounds. Earlier PRs in this repo merged the same way. Ticket 59 adds the first CI job.
+- Ticket 32's last box (copy the PR template into the 5 code repos) stays open. The earlier handoff left it undone on purpose.
+- The new clone test makes local mirrors and points each mirror's default branch away from `develop`. On GitHub, `develop` is the default branch of every repo that has it, so a plain clone could not show whether `clone-all.sh` checks out `develop` itself.
+
+**Traps.**
+- **Agent-tool `isolation: "worktree"` fails from `~/code/linkja`.** That folder is not a git repo. Make reviewer worktrees by hand: `git -C <repo> worktree add --detach <path> <branch>`.
+- **The installed documenter had no shell** (plugin 1.18.0). It could not measure a claim or commit. Plugin 1.19.1 corrects this. Check the version a session loaded before you send it measurement work.
+- **A review that measures every claim again is slow.** The first review of PR 60 used 114 tool calls in about 13 minutes. Paste the builder's source lines into the review prompt, and keep later rounds to the fix.
+- **`Closes #N` on a rebase merge closed the issues a few seconds late.** Check the issue state again before you close one by hand.
+- **The clone test reads the default address from the text of `clone-all.sh`.** A caller-set `LINKJA_GIT_BASE` skips that check. The old `linkja` org has every repo except `linkja-workspace`, so the test asserts `repos.txt` lists it.
+
+**Next.**
+
+The open `lane` issues hold the tasks. List them with step 3 of Start here.
+
+**Waits on the owner.**
+- **Ticket 32, last box: copy the PR template into the 5 code repos, or add an org `.github` repo?**
+- **After ticket 59 merges: make its `linux` job a required check on `master`?**
