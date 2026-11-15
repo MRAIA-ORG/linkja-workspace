@@ -38,7 +38,7 @@ within hours. Derive them with `gh issue list` and the scripts in the repo.
 - `develop` and `master` will require a PR and passing CI, with admin bypass and 0 required approvals. Every PR still gets an independent review before merge.
 - **Java 25** for all repos. Superseded the same day: Java 17, chosen before the `develop` branches were read.
 - C library platforms: Windows x64, Linux x64, macOS universal.
-- CI: one Linux job per repo. It compiles linkja-crypto with a throwaway secret, then runs the tests. Superseded 2026-11-13 by the owner: CI compiles the public build, because no current test uses the secret. The golden test (ticket 10) is the first job that needs the secret build.
+- CI: one Linux job per repo. It compiles linkja-crypto with a throwaway secret, then runs the tests. Superseded 2026-11-13 by the owner for the four program repos: their CI compiles the public build, because no program test uses the secret. linkja-crypto CI keeps the throwaway secret build, because its C tests need it. The golden test (ticket 10) is the first program job that needs the secret build.
 - Released jars stay in MRAIA-ORG/linkja-mvn-repo. The three program poms must point there (the old `linkja` address returns 404).
 - Hash file format v1 stays byte-identical during the redesign (ADR 0001, on `master`).
 - SQL-hashing is legacy. No work beyond its README.
@@ -105,7 +105,7 @@ Recount open tickets: `gh issue list -R MRAIA-ORG/linkja-workspace --state open`
 **Waits on the owner.**
 - Optional: overrule any decision Claude made above.
 
-## 2026-11-13: Java 25 and CI in all four Java repos
+## 2026-11-13: Java 25 and CI in all four Java program repos
 
 **What happened.** Tickets 4 to 7 are merged into `develop` and closed. linkja-core, linkja-hashing, linkja-matching and linkja-salt-engine now build on Java 25 from a clean machine, with current dependencies, pinned plugins and one Linux CI job each. Each PR body has a `Rounds:` line and a `## Review findings` section with every finding fixed, ticketed or rejected. Read them with `gh pr view 1 -R MRAIA-ORG/<repo>`.
 
@@ -121,7 +121,7 @@ Recount open tickets: `gh issue list -R MRAIA-ORG/linkja-workspace --state open`
 **Facts the next tickets need.**
 - Every CI job in the five code repos is named `linux` (linkja-crypto included). Ticket 9 needs that name for the required check.
 - Three program CI jobs compile the public build of the C library: linkja-core, linkja-hashing and linkja-salt-engine. linkja-matching CI only packages the jar and resolves JavaFX, so it needs no C library and no cmocka.
-- linkja-core: two tests failed on Java 25 before this work. `AES/GCM/PKCS5Padding` stopped resolving in Java 14 (OpenJDK JDK-8180392), and `AES/GCM/NoPadding` gives the same bytes. The C library accepts only 2048-bit RSA keys, and the old test keys were 1024-bit.
+- linkja-core: tests failed on Java 25 before this work, for two causes. `AES/GCM/PKCS5Padding` stopped resolving in Java 14 (OpenJDK JDK-8180392), and `AES/GCM/NoPadding` gives the same bytes. The C library accepts only 2048-bit RSA keys, and the old test keys were 1024-bit.
 - Tests find the C library through the `native.lib.dir` Maven property (default `lib/`). The committed `lib/` libraries in salt-engine and matching are x86_64 only (ticket 43).
 - The released linkja-core 1.1.0 in linkja-mvn-repo differs from linkja-core `develop`, which is also labelled 1.1.0. Never `mvn deploy` before ticket 37 picks a new version.
 
@@ -136,15 +136,13 @@ Recount open tickets: `gh issue list -R MRAIA-ORG/linkja-workspace --state open`
 
 **Next.**
 
-**First task:** review and merge the open `docs/handoff-2026-11-13` PR in this repo (this handoff). The owner chose to leave it open on 2026-11-13, because its last correction had no independent review. Dispatch `fresh-eye` on it, fix what blocks, then merge. Find it with `gh pr list -R MRAIA-ORG/linkja-workspace --head docs/handoff-2026-11-13`.
-
-**Then:** ticket 9 (branch protection on `develop` and `master` of the five code repos). Its blockers are closed. The required check is `linux` in each repo. `master` of the five code repos has no CI file until the next release PR from `develop`, so check that requiring `linux` on `master` does not block that PR. linkja-core `master` is ahead of `develop`, so read both before the first release PR.
+**First task:** ticket 9 (branch protection on `develop` and `master` of the five code repos). GitHub lists no open blocker for it. The "Blocked by" list in its body is out of date and still names ticket 2. Read the owner's 2026-11-15 comment on ticket 9 first: keep `develop` plus `master`, and keep admin bypass, because Jonathan Carr and Larry Lemmon push directly to `develop`. Admin bypass comes off only after the owner tells them. Before you require `linux` on linkja-crypto `develop`, look at its last CI run: `gh run list -R MRAIA-ORG/linkja-crypto --branch develop --limit 1`. On 2026-11-12 Jonathan Carr pushed a `pom.xml` change there, and that run failed because Maven Central did not serve `maven-resources-plugin:3.4.0` at that time. The required check is `linux` in each repo. `master` of the five code repos has no CI file until the next release PR from `develop`, so check that requiring `linux` on `master` does not block that PR. linkja-core `master` is ahead of `develop`, so read both before the first release PR.
 
 **Then, in order:**
 1. Ticket 8 (Docker images), only after the releases named above. Facts for it:
    - The Dockerfiles clone the old `github.com/linkja/...` repos with no ref, and use `adoptopenjdk/openjdk11` base images. The matching image uses `adoptopenjdk/openjdk11:alpine` (musl). JavaFX Linux natives and a glibc C library may not load on Alpine.
    - The crypto image clones `-b linux-build` from the old `linkja` org. That branch still exists there. Only the MRAIA-ORG copy was deleted.
-   - `test-data/liblinkjacrypto.so` is a committed x86-64 binary. Only the program READMEs name it.
+   - `test-data/liblinkjacrypto.so` is a committed x86-64 binary. The program READMEs name it, and the linkja-docker root README links to its folder.
    - On an Apple Silicon Mac, `docker build` gives arm64, and the matching pom has no arm64 Linux default. Use `--platform linux/amd64`.
 2. Ticket 24 (workspace README links). When it merges, close ticket 1.
 3. Ticket 38 (linkja-crypto CMake without cmocka). Then drop cmocka from the three program CI jobs that compile the C library (core, hashing, salt-engine). linkja-crypto CI keeps it for its C tests.
