@@ -214,6 +214,18 @@ mvn install
 
 ## Release a code repo
 
+### Version numbers
+
+The code repos use SemVer (`MAJOR.MINOR.PATCH`). Pick the next number by the largest change since the last release:
+
+- Major: a change to the public API, a change to the hash file format, or a higher minimum Java version. E.g. linkja-core 1.1.0 runs on Java 8, and the next release needs Java 25, so it is 2.0.0.
+- Minor: a new function that keeps old code working.
+- Patch: fixes only.
+
+Between releases, `develop` carries the next version with `-SNAPSHOT`, e.g. `2.0.0-SNAPSHOT`. Decided by the owner on 2026-11-15 ([linkja-workspace#37](https://github.com/MRAIA-ORG/linkja-workspace/issues/37)).
+
+### Steps
+
 Do these steps in this order. All of them are **release time, not run here**, except `mvn versions:set` and `mvn deploy`. Those two were run in a scratch clone, `mvn deploy` with `-DskipTests` (see Known gaps).
 
 1. On a branch from `develop`, set the release version and merge it into `develop` by PR:
