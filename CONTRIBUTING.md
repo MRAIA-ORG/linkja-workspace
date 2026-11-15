@@ -227,9 +227,10 @@ Do these steps in this order. All of them are **release time, not run here**, ex
 
    ```sh
    gh pr create --base master --head develop --title "chore(release): v1.2.0"
-   gh pr checks --watch
-   gh pr merge --merge
+   gh pr checks develop --watch && gh pr merge develop --merge
    ```
+
+   If `gh pr checks` prints `no checks reported`, CI has not started yet. Wait a minute and run the line again.
 
 3. Tag the merge on `master` and push the tag:
 
