@@ -38,7 +38,7 @@ within hours. Derive them with `gh issue list` and the scripts in the repo.
 - `develop` and `master` will require a PR and passing CI, with admin bypass and 0 required approvals. Every PR still gets an independent review before merge.
 - **Java 25** for all repos. Superseded the same day: Java 17, chosen before the `develop` branches were read.
 - C library platforms: Windows x64, Linux x64, macOS universal.
-- CI: one Linux job per repo. It compiles linkja-crypto with a throwaway secret, then runs the tests.
+- CI: one Linux job per repo. It compiles linkja-crypto with a throwaway secret, then runs the tests. Superseded 2026-11-13 by the owner for the four program repos: their CI compiles the public build, because no program test uses the secret. linkja-crypto CI keeps the throwaway secret build, because its C tests need it. The golden test (ticket 10) is the first program job that needs the secret build.
 - Released jars stay in MRAIA-ORG/linkja-mvn-repo. The three program poms must point there (the old `linkja` address returns 404).
 - Hash file format v1 stays byte-identical during the redesign (ADR 0001, on `master`).
 - SQL-hashing is legacy. No work beyond its README.
@@ -103,4 +103,60 @@ Facts for ticket 4:
 Recount open tickets: `gh issue list -R MRAIA-ORG/linkja-workspace --state open`. See which can start: `gh api repos/MRAIA-ORG/linkja-workspace/issues/<n>/dependencies/blocked_by --jq '[.[].number]'`.
 
 **Waits on the owner.**
+- Optional: overrule any decision Claude made above.
+
+## 2026-11-13: Java 25 and CI in all four Java program repos
+
+**What happened.** Tickets 4 to 7 are merged into `develop` and closed. linkja-core, linkja-hashing, linkja-matching and linkja-salt-engine now build on Java 25 from a clean machine, with current dependencies, pinned plugins and one Linux CI job each. Each PR body has a `Rounds:` line and a `## Review findings` section with every finding fixed, ticketed or rejected. Read them with `gh pr view 1 -R MRAIA-ORG/<repo>`.
+
+**Decisions (owner, 2026-11-13).**
+- linkja-matching ships one jar per platform. The Intel Mac and Apple Silicon JavaFX files have the same names, so one jar cannot hold both. Only `--gui` needs the jar of its own platform. Command-line matching and `--decrypt` load no JavaFX and run from any jar.
+- Program CI compiles the public build of the C library. This supersedes the 2026-11-10 plan of a secret build with a throwaway secret.
+- Ticket 8 (Docker images) waits for real releases. No tag holds the Java 25 code, and the C library fixes are only on linkja-crypto `develop`. The images use released code only, so ticket 8 waits on the linkja-core version (ticket 37) and a linkja-crypto release (ticket 2).
+
+**Decisions Claude made, open to the owner's overrule.**
+- Ticket 5 closed with Bouncy Castle 1.61 still in the hashing jar. It comes from the released linkja-core 1.1.0. The fix is the next linkja-core release (ticket 37).
+- The last review of linkja-matching found README and CI nits for arm64. They went into ticket 46, with no fifth review round for README wording.
+
+**Facts the next tickets need.**
+- Every CI job in the five code repos is named `linux` (linkja-crypto included). Ticket 9 needs that name for the required check.
+- Three program CI jobs compile the public build of the C library: linkja-core, linkja-hashing and linkja-salt-engine. linkja-matching CI only packages the jar and resolves JavaFX, so it needs no C library and no cmocka.
+- linkja-core: tests failed on Java 25 before this work, for two causes. `AES/GCM/PKCS5Padding` stopped resolving in Java 14 (OpenJDK JDK-8180392), and `AES/GCM/NoPadding` gives the same bytes. The C library accepts only 2048-bit RSA keys, and the old test keys were 1024-bit.
+- Tests find the C library through the `native.lib.dir` Maven property (default `lib/`). The committed `lib/` libraries in salt-engine and matching are x86_64 only (ticket 43).
+- The released linkja-core 1.1.0 in linkja-mvn-repo differs from linkja-core `develop`, which is also labelled 1.1.0. Never `mvn deploy` before ticket 37 picks a new version.
+
+**Traps.**
+- **GitHub runs no CI on a PR with a merge conflict, and says nothing.** `gh pr checks` reports "no checks". Jonathan Carr pushed README commits to hashing and matching `develop` on 2026-11-12, after the lanes started. On an open PR, check `gh pr view <n> --json mergeable` before you wait for CI.
+- **linkja-crypto CMake requires cmocka on Linux and macOS.** Its find module sets `LIBCMOCKA_FOUND`, never `CMOCKA_FOUND` (ticket 38). Every CI job that compiles the C library installs `libcmocka-dev`.
+- **linkja-crypto `cmake` on macOS needs `JAVA_HOME`** and `-DOPENSSL_ROOT_DIR="$(brew --prefix openssl@3)"`. Homebrew `openssl@3` is keg-only (ticket 39).
+- **Parallel lanes need their own Maven folder.** Each builder used `-Dmaven.repo.local=<scratch>/m2-<repo>`. That also proves a clean machine resolves everything.
+- **`git -C <worktree> commit` from a folder on `master` can be blocked** by the safety hook. Run the commit from inside the worktree.
+
+**Deliberately not done.** No branch protection yet (ticket 9 is next). No linkja-core release (ticket 37 waits on the owner). The secret hash path in hashing has no test (ticket 10).
+
+**Next.**
+
+**First task:** ticket 9 (branch protection on `develop` and `master` of the five code repos).
+- The required check is `linux` in each repo.
+- GitHub lists no open blocker for ticket 9. The "Blocked by" list in its body is out of date and still names ticket 2.
+- Read the owner's 2026-11-15 comment on ticket 9 first. It keeps `develop` plus `master`, and keeps admin bypass, because Jonathan Carr and Larry Lemmon push directly to `develop`. Admin bypass comes off only after they have used PRs with CI for a few weeks, and after the owner tells them.
+- The last CI run on linkja-crypto `develop` failed. Check it with `gh run list -R MRAIA-ORG/linkja-crypto --branch develop --limit 1`. It ran on Jonathan Carr's `pom.xml` push of 2026-11-12, when Maven Central did not serve `maven-resources-plugin:3.4.0`. Do not re-run it without a change. The next PR into `develop` runs CI again.
+- `master` of the five code repos has no CI file until the next release PR from `develop`. Check that requiring `linux` on `master` does not block that PR.
+- linkja-core `master` is ahead of `develop`, so read both before the first release PR.
+
+**Then, in order:**
+1. Ticket 8 (Docker images), only after the releases named in the 2026-11-13 decisions (tickets 37 and 2). Facts for it:
+   - The Dockerfiles clone the old `github.com/linkja/...` repos with no ref, and use `adoptopenjdk/openjdk11` base images. The matching image uses `adoptopenjdk/openjdk11:alpine` (musl). JavaFX Linux natives and a glibc C library may not load on Alpine.
+   - The crypto image clones `-b linux-build` from the old `linkja` org. That branch still exists there. Only the MRAIA-ORG copy was deleted.
+   - `test-data/liblinkjacrypto.so` is a committed x86-64 binary. The program READMEs name it, and the linkja-docker root README links to its folder.
+   - On an Apple Silicon Mac, `docker build` gives arm64, and the matching pom has no arm64 Linux default. Use `--platform linux/amd64`.
+2. Ticket 24 (workspace README links). When it merges, close ticket 1.
+3. Ticket 38 (linkja-crypto CMake without cmocka). Then drop cmocka from the three program CI jobs that compile the C library (core, hashing, salt-engine). linkja-crypto CI keeps it for its C tests.
+4. Ticket 10 (golden test, hashing to decrypted output). Its CI needs the secret build. Then ticket 11 (golden test, matching output), then the design tickets 12 to 18 in the 2026-11-10 design order. Ticket 2 stays open until the Windows build check, ticket 28 and the linkja-crypto release from `develop` to `master`.
+5. Follow-ups, `ready-for-agent` first: 34, 35, 36, 39, 40, 41, 42, 44, 45. Then 46 and 43 (43 waits on 28). Older: 20, 21, 23, 25, 27, 28, 29, 30, 32.
+
+Recount open tickets: `gh issue list -R MRAIA-ORG/linkja-workspace --state open`. Agent-ready: `gh issue list -R MRAIA-ORG/linkja-workspace --label ready-for-agent`. See which can start: `gh api repos/MRAIA-ORG/linkja-workspace/issues/<n>/dependencies/blocked_by --jq '[.[] | select(.state=="open") | .number]'`.
+
+**Waits on the owner.**
+- **Ticket 37: pick the next linkja-core version (e.g. 1.2.0).** Needed before any deploy to linkja-mvn-repo. It also removes Bouncy Castle 1.61 from the program jars, and ticket 8 waits on it.
 - Optional: overrule any decision Claude made above.
