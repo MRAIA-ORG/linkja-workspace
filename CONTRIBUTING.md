@@ -155,7 +155,7 @@ Older files that indent another way:
 - linkja-hashing: `Engine.java`, `EngineTest.java` and `DataHeaderMapTest.java` have some lines with tabs.
 - linkja-matching: `BinaryFileBuffer.java` uses 4 spaces. `ExternalSort.java`, `GlobalMatchSqlite.java` and `GlobalMatchTasks.java` use tabs.
 
-In linkja-matching, `ExternalSort.java`, `GlobalMatchTasks.java`, `BinaryFileBuffer.java` and `StringSizeEstimator.java` have CRLF line ends. `GlobalMatchSqlite.java` has LF line ends.
+In linkja-matching, `ExternalSort.java`, `GlobalMatchTasks.java`, `BinaryFileBuffer.java`, `StringSizeEstimator.java` and `src/main/resources/GlobalMatchDDL-v2.txt` have CRLF line ends. `GlobalMatchSqlite.java` has LF line ends.
 `GlobalMatchTasks.java` has trailing spaces. `BinaryFileBuffer.java` and `StringSizeEstimator.java` have no newline at the end of the file.
 Keep them as they are. When you copy `.editorconfig` into linkja-matching, add these sections at the end, so that an editor does not rewrite those files:
 
@@ -173,7 +173,35 @@ indent_style = tab
 [src/main/java/org/linkja/matching/{BinaryFileBuffer,StringSizeEstimator}.java]
 end_of_line = crlf
 insert_final_newline = false
+
+[src/main/resources/GlobalMatchDDL-v2.txt]
+end_of_line = crlf
 ```
+
+Three more repos have files with CRLF line ends. Keep them as they are. When you copy `.editorconfig` into one of these repos, add its section at the end.
+
+linkja-hashing, for its example key and example hash file. This copy replaces the older `.editorconfig` in linkja-hashing:
+
+```ini
+[src/main/resources/example/{public-test.key,hashes_1_Linkja Project_20200531231422.csv}]
+end_of_line = crlf
+```
+
+linkja-docker:
+
+```ini
+[test-data/public-agg.key]
+end_of_line = crlf
+```
+
+linkja-test-data:
+
+```ini
+[hashing/public-agg.key]
+end_of_line = crlf
+```
+
+SQL-hashing gets no copy of `.editorconfig`. The repo is legacy and gets no work beyond its README. All of its `.bat` and `.sql` files, `config.txt`, and the sample files in `Log/` and `Output/` have CRLF line ends. The shared file would change them to LF.
 
 ### C (linkja-crypto)
 
