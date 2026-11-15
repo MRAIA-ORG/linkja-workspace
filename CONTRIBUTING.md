@@ -194,15 +194,15 @@ insert_final_newline = false
 
 During development, a program uses a `-SNAPSHOT` build of linkja-core or linkja-crypto from your local Maven repository (`~/.m2`).
 
-1. Install linkja-crypto first (see Install the libraries). Then give linkja-core's `develop` the next version with `-SNAPSHOT` and install it:
+1. Install linkja-crypto first (see Install the libraries). Then install linkja-core from `develop`. Its `develop` already carries the next version with `-SNAPSHOT`, so do not change it:
 
    ```sh
    cd linkja-core
-   mvn versions:set -DnewVersion=1.2.0-SNAPSHOT -DgenerateBackupPoms=false
    mvn install -DskipTests
+   grep -m1 '<version>' pom.xml
    ```
 
-2. In the program's `pom.xml`, set the `<version>` of the `linkja-core` dependency to the same `1.2.0-SNAPSHOT`.
+2. In the program's `pom.xml`, set the `<version>` of the `linkja-core` dependency to the version that `grep` printed, e.g. `2.0.0-SNAPSHOT`. Do not commit that change until the version is released.
 3. Build the program. Maven finds the library in `~/.m2`.
 
 To build linkja-crypto's Java classes and install its jar the same way:
@@ -213,6 +213,20 @@ mvn install
 ```
 
 ## Release a code repo
+
+### Version numbers
+
+The code repos use SemVer (`MAJOR.MINOR.PATCH`). Pick the next number by the largest change since the last release:
+
+- Major: a change to the public API, a change to the hash file format, or a higher minimum Java version. E.g. linkja-core 1.1.0 runs on Java 8, and the next release needs Java 25, so it is 2.0.0.
+- Minor: a new function that keeps old code working.
+- Patch: fixes only.
+
+The owner decided this rule on 2026-11-15 ([linkja-workspace#37](https://github.com/MRAIA-ORG/linkja-workspace/issues/37)).
+
+Between releases, `develop` carries the next version with `-SNAPSHOT`, e.g. `2.0.0-SNAPSHOT`. After a release, it gets the next patch version (step 6). When a PR brings a minor or major change into `develop`, that PR also raises the `-SNAPSHOT` version.
+
+### Steps
 
 Do these steps in this order. All of them are **release time, not run here**, except `mvn versions:set` and `mvn deploy`. Those two were run in a scratch clone, `mvn deploy` with `-DskipTests` (see Known gaps).
 
@@ -272,7 +286,6 @@ Do these steps in this order. All of them are **release time, not run here**, ex
 
 These were true when this file was written. Each one is a separate piece of work.
 
-- linkja-core and linkja-crypto still compile for Java 8 (`1.8`). The three programs on `develop` already compile for Java 25.
 - The poms carry release versions (e.g. `1.1.0`) on `develop`. The `-SNAPSHOT` flow above starts when a PR sets the first `-SNAPSHOT` version.
 - The programs download linkja-core and linkja-crypto from `https://raw.github.com/linkja/linkja-mvn-repo/master`, the old organization.
 - The linkja-core tests load the native linkja-crypto library from `linkja-core/lib`. That folder has no library in it.
