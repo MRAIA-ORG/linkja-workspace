@@ -2,20 +2,55 @@
 
 ## Start here
 
-You are a fresh session and this file is your whole briefing. Nobody
-writes you a separate prompt. Do these in order, then work.
+You are a fresh session. This file and the open `lane` issues are your
+whole briefing. Nobody writes you a separate prompt. Do these in order.
 
 1. Load skills `ship-loop`, `git-lanes` and `fresh-eye` before touching
    anything. Read the repo `CLAUDE.md`.
-2. Read the LAST section of this file (the most recent date). It names
-   the first task, the tickets in order, and what waits on the owner.
-3. Run the recount commands that section carries before trusting any
-   number in it.
-4. Start the first task it names. Ask the owner nothing that section
-   already answers.
+2. Check that the repo has the label. This prints `lane` if it does:
+   `gh label list --search lane --json name --jq '.[] | select(.name == "lane") | .name'`
+   It prints nothing: this repo has no lane label yet. Read the LAST
+   section of this file for the tasks, and go to step 6.
+3. List the open lanes. Free lanes come first, lowest issue number
+   first. Held lanes follow, oldest time first:
 
-Whoever closes a session rewrites the last section so step 2 stays true,
-and leaves this block alone.
+   gh issue list --label lane --state open --limit 100 --json number,title,body --jq '(now | strftime("%Y-%m-%dT%H:%MZ")) as $now | map(((.body // "") | split("\n") | first // "" | rtrimstr("\r")) as $h | {n: .number, t: .title, h: $h, s: (($h | capture("^Held by: (?<name>.+), since (?<time>[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}Z)$") | select(.name != "nobody" and .time <= $now) | .time) // null)}) | sort_by(if .s then [1, .s, .n] else [0, .n] end) | .[] | "#\(.n) \(.t) | \(if .s or .h == "Held by: nobody" then .h else "Held by: (malformed)" end)"'
+
+   No lines: no lane is open. Read the LAST section of this file for the
+   tasks, and go to step 6. 100 lines: raise `--limit`, list again.
+4. Pick a lane. A lane is free when its `Held by:` line says nobody or
+   is malformed, or its time is over 24 hours old and ListAgents does
+   not show that session live. Else it is held. The owner named a lane:
+   take it, and if it is held, tell the owner and stop. Else, one free
+   lane: take it. More than one: ask the owner with one AskUserQuestion,
+   one option per free lane in list order, the first recommended. No
+   owner present (a cloud routine, a headless run): take the first free
+   lane. No free lane: tell the owner, and stop.
+5. Claim it, after any answer from the owner:
+   `python3 scripts/lane_claim.py claim <N> "<name>"`. Add
+   `--holder-not-live` only when step 4 found the lane free by its
+   24-hour rule. Exit 0: you hold the lane. Exit 1: it says why. Change
+   nothing. The owner named this lane: tell the owner and stop. Else go
+   back to step 4. Any other exit, e.g. no `scripts/lane_claim.py` or a
+   failed `gh`: change nothing, stop, and tell the owner. <name> is your
+   session name as ListAgents prints it. With no ListAgents, use your
+   harness and worktree, e.g. `laptop:04-handoff-lanes`. A cloud routine
+   adds its run start, e.g. `cloud routine nightly 2026-11-10T06:17Z`.
+6. Read the lane issue's `## Next`, or with no lane the LAST section.
+   Read the recent sections of this file for traps. Run the recount
+   commands before trusting any number. A task with no mark is `parallel`
+   unless it names another task it waits for. Start every `parallel`
+   task it names in the same turn, each in its own worktree (`git-lanes`), two
+   to four at once. Start any more as earlier tasks merge or stop. Start an
+   `after` task when its dependency merges. If you stop before that,
+   leave it in `## Next` with its `after` mark for the next session. Ask
+   the owner nothing it already answers.
+
+Write a lane body only with `scripts/lane_claim.py write` or `release`,
+and if it refuses, change nothing, stop, and tell the owner. Update
+`## Next` with `python3 scripts/lane_claim.py write <N> "<name>" <file>`,
+and free the lane with `python3 scripts/lane_claim.py release <N> "<name>"`
+when you stop. Leave this block alone.
 
 Judgment and reasoning only. No counts, no SHAs, no issue tallies: those rot
 within hours. Derive them with `gh issue list` and the scripts in the repo.
@@ -159,4 +194,38 @@ Recount open tickets: `gh issue list -R MRAIA-ORG/linkja-workspace --state open`
 
 **Waits on the owner.**
 - **Ticket 37: pick the next linkja-core version (e.g. 1.2.0).** Needed before any deploy to linkja-mvn-repo. It also removes Bouncy Castle 1.61 from the program jars, and ticket 8 waits on it.
+- Optional: overrule any decision Claude made above.
+
+## 2026-11-15: branch protection on, linkja-core 2.0.0-SNAPSHOT, lanes
+
+**What happened.** The 2026-11-13 handoff merged after three more review rounds (PR 47). Branch protection is on for `develop` and `master` in the five code repos, and ticket 9 is closed (PR 48). linkja-core `develop` is `2.0.0-SNAPSHOT` (linkja-core PR 2), the first PR under the new protection: its `linux` check ran and passed. CONTRIBUTING has the version rule (PR 49). Each PR body has its `Rounds:` line and `## Review findings`. This pass moved the handoff to `lane` issues.
+
+**Decisions (owner, 2026-11-15).**
+- Keep git flow and admin bypass (comment on ticket 9).
+- Version rule: SemVer. Major for a public API change, a hash file format change, or a higher minimum Java. Minor for a new function that keeps old code working. Patch for fixes only. The next linkja-core version is 2.0.0, because 1.1.0 runs on Java 8 and `develop` needs Java 25. 1.1.1 and 1.2.0 were rejected for that reason (comment on ticket 37).
+- Work from clones of the MRAIA-ORG repos, with branches in those repos. A fork was rejected: a fork of a public repo is public, so it hides nothing, and it splits branches from their PRs, tickets and CI.
+- The handoff and the tickets stay public in this repo.
+- Move this handoff to `lane` issues.
+
+**Decisions Claude made, open to the owner's overrule.**
+- Ticket 8 is now blocked by tickets 37 and 2 on GitHub, and ticket 43 by ticket 28. `ready-for-agent` came off ticket 8. Before this, the handoff's own command said Docker work could start.
+- The old clone at `/Users/yw1084/code/linkja-core` and two orca worktrees of this repo were deleted. None held unpushed or uncommitted work.
+- Five lanes split the open tickets: releases, C library, golden tests and design, workspace docs, follow-ups. No ticket is a task in two lanes.
+
+**Traps.**
+- **Larry Lemmon (`llemmon`) has `read` on all five code repos.** The ticket 9 comment says he pushes to `develop`. He cannot push at all today. Jonathan Carr pushes as `rainercarr` (admin). His older account `jonathancarrcch` has `read`. Recount: `gh api repos/MRAIA-ORG/linkja-core/collaborators --jq '.[] | "\(.login) \(.role_name)"'`.
+- **`gh issue comment` has no `--jq` flag.** With `2>/dev/null` the failure was silent, and the owner decision did not reach ticket 37 until a reviewer found it missing. Never hide the error output of a write.
+- **A handoff pass must collect notes from all repos.** The lane issues live here, but the work merges in the code repos too. Run the pass's `gh pr list` with `-R MRAIA-ORG/<repo>` for each repo in `scripts/repos.txt`. The code repos have no PR template, so their PR bodies carry a `## Handoff notes` section only when the author writes one.
+- **zsh treats a word that starts with `=` as a command path.** `echo =====` fails with "not found". Quote it.
+- **A required check on a branch with no CI file.** `master` of the code repos has no `ci.yml`. A release PR from `develop` gets `linux` from its merge commit. A hotfix branch cut from `master` would never get `linux`, so only an admin could merge it. CONTRIBUTING has no hotfix flow.
+
+**Deliberately not done.** No PR template in the five code repos. No release yet: the first `mvn deploy` waits on the owner (releases lane).
+
+**Next.**
+
+The open `lane` issues hold the tasks. List them with step 3 of Start here. Each lane's `## Next` marks its tasks `parallel` or `after`. Five lanes were opened today: releases, C library, golden tests and design, workspace docs, follow-ups.
+
+**Waits on the owner.**
+- **Approve the first `mvn deploy` to linkja-mvn-repo** (releases lane).
+- **If Larry Lemmon must push, give him admin access.** Write access below admin lets branch protection stop his direct pushes.
 - Optional: overrule any decision Claude made above.
