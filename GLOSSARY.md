@@ -22,7 +22,11 @@ _Avoid_: hub, central site, matcher
 
 **Aggregator key**:
 The RSA key pair of the aggregator. Sites use its public key to lock the session key and the library signature, and only the aggregator can unlock them.
-_Avoid_: project key, site key
+_Avoid_: project key
+
+**Recipient**:
+A party outside the project to which the aggregator sends hash values, re-keyed for that party alone.
+_Avoid_: third party, partner, destination
 
 ## Secrets
 
@@ -35,8 +39,8 @@ The salt shared by every site in one project.
 _Avoid_: shared token
 
 **Private salt**:
-The salt that belongs to one site only.
-_Avoid_: site token, site-specific secret
+The salt that a site adds only to its PIDHASH. It goes into no other hash value.
+_Avoid_: site token
 
 **Salt file**:
 A plain text file that gives one site its site ID, site name, project name, project salt and private salt. It is not encrypted, so it must reach the site by a secure route.
@@ -45,6 +49,14 @@ _Avoid_: token file, key file, encrypted salt file
 **Private date**:
 A secret date that each site chooses and keeps. The number of days between it and a patient's birth date goes into that patient's PIDHASH.
 _Avoid_: offset date, site date
+
+**Site key**:
+The secret that a site adds to each of its hash values other than PIDHASH. So two sites give different hash values for the same patient. Only the aggregator can turn them into one comparable form.
+_Avoid_: site salt
+
+**Re-key**:
+The aggregator step that turns hash values made under different site keys into one shared form, so that they can be matched.
+_Avoid_: translate, decrypt
 
 **Library secret**:
 A secret compiled into one secret build of the crypto library, and added to each hash value before it is written to the hash file. Every site in a project must use the same secret build.
@@ -60,16 +72,28 @@ _Avoid_: test build, private build
 
 ## Hashing and files
 
+**Input extract**:
+The file of patient rows that a site takes from its own records for one hashing run. It may hold columns that linkja does not use.
+_Avoid_: patient file
+
+**Run config**:
+The key=value file a site fills in for one hashing run. It names the salt file, the aggregator key, the private date, the input extract and the column map.
+_Avoid_: settings, parameters, `Config.txt`
+
+**Column map**:
+The part of the run config that says which column of the input extract holds each patient detail. It lets a site keep its own layout.
+_Avoid_: field mapping, schema
+
 **Hash rule**:
 One fixed mix of patient details that is hashed together, e.g. first name + last name + birth date.
 _Avoid_: token type, composite, combination
 
 **Hash value**:
-The scrambled result of one hash rule for one patient row. Each row has 11 slots, one per hash rule. A slot is empty when the row lacks a detail that hash rule needs, such as an SSN.
+The scrambled result of one hash rule for one patient row. Each row has one slot per hash rule. A slot is empty when the row lacks a detail that hash rule needs, such as an SSN.
 _Avoid_: token, hash column, hash
 
 **PIDHASH**:
-The hash value made from the site's own patient ID, the site ID, the private date and the private salt. It is the first of the 11 hash values.
+The hash value made from the site's own patient ID, the site ID, the private date and the private salt. It is the first hash value of each row.
 _Avoid_: patient token
 
 **Crosswalk**:
@@ -99,8 +123,12 @@ _Avoid_: AES key, file key
 ## Matching
 
 **Match rule**:
-A test that says two patient rows are the same person when a given set of their hash values are equal.
+A test that says when two patient rows are the same person, based on which of their hash values are equal. Most match rules need one given set of hash values to be equal.
 _Avoid_: rule (alone), match pass
+
+**Majority match rule**:
+A kind of match rule that counts, over a set of hash rules, the hash values that both rows have. Two rows are the same person when enough of those hash values are equal.
+_Avoid_: fuzzy match
 
 **Global ID**:
 The ID that matching gives to every group of rows that belong to the same person, across all sites.

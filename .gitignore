@@ -1,0 +1,10 @@
+# Local files kept out of version control
+internal/
+*.xlsx
+*.xls
+*.docx
+*.pptx
+*.pdf
+# Local tooling
+.worktrees/
+.DS_Store
