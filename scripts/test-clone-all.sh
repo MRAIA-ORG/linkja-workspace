@@ -1,10 +1,10 @@
 #!/bin/sh
 # Check clone-all.sh against mirrors of the GitHub repos: a fresh clone that
 # puts every repo with develop on develop and the others on their default
-# branch, then a second run that fast-forwards a repo that is behind, skips
-# repos with untracked, staged or unstaged changes, skips a folder that is not
-# a git repo, and leaves alone a repo that is ahead and behind and a repo on a
-# detached HEAD.
+# branch, then a second run that fetches a new commit from a mirror,
+# fast-forwards a repo that is behind, skips repos with untracked, staged or
+# unstaged changes, skips a folder that is not a git repo, and leaves alone a
+# repo that is ahead and behind and a repo on a detached HEAD.
 # Usage: scripts/test-clone-all.sh [empty-dir]
 #   Default: a new temp dir, deleted on exit. A dir you give is kept.
 set -eu
@@ -67,7 +67,12 @@ while read -r repo; do
 done < "$here/repos.txt"
 
 # Put linkja-core one commit behind, and give linkja-hashing a local change.
+# Add a new commit to the linkja-core mirror, so only a fetch can bring it in.
 git -C "$dir/linkja-core" reset --quiet --hard HEAD~1
+mirror="$LINKJA_GIT_BASE/linkja-core.git"
+new_commit=$(git -C "$mirror" -c user.name=test -c user.email=test@example.invalid \
+  commit-tree -p develop -m "new commit on the mirror" 'develop^{tree}')
+git -C "$mirror" update-ref refs/heads/develop "$new_commit"
 echo "local work" > "$dir/linkja-hashing/local-change.txt"
 
 # Stage a new file in linkja-crypto. Change a tracked file in linkja-docker without staging it.
@@ -99,6 +104,8 @@ echo "== second run"
 out=$("$here/clone-all.sh" "$dir") || fail "second run exited non-zero"
 echo "$out"
 
+[ "$(git -C "$dir/linkja-core" rev-parse origin/develop)" = "$new_commit" ] \
+  || fail "linkja-core did not fetch the new commit on its mirror"
 [ "$(git -C "$dir/linkja-core" rev-parse HEAD)" = "$(git -C "$dir/linkja-core" rev-parse origin/develop)" ] \
   || fail "linkja-core was not fast-forwarded"
 echo "$out" | grep -q "linkja-hashing: skipped, local changes" || fail "linkja-hashing was not skipped"
