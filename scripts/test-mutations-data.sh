@@ -73,7 +73,11 @@ check 'leading tab' 1 'line 1: field 1 (label) is blank' '\ta\tmirror\ts|x|y|\ts
 check 'unknown source' 1 "line 1: unknown source 'mirorr'" 'a\tmirorr\ts|x|y|\tsome test text\tPR #1\n'
 check 'no mutations' 1 'no mutations in' '# only a comment\n'
 check 'label that starts with a space' 0 'OK: 1 mutation lines' ' lead\tmirror\ts|x|y|\tsome test text\tPR #1\n'
-check 'expect shorter than 10 characters' 1 "line 1: field 4 (expect) 'e' is too weak" 'a\tmirror\ts|x|y|\te\tPR #1\n'
+check 'expect shorter than 10 characters, after a valid line' 1 "line 2: field 4 (expect) 'e' is too weak: want 10 or more" "${ok}b\tmirror\ts|x|y|\te\tPR #1\n"
+check 'expect of 9 characters' 1 "line 1: field 4 (expect) '123456789' is too weak" 'a\tmirror\ts|x|y|\t123456789\tPR #1\n'
+check 'expect of 10 characters' 0 'OK: 1 mutation lines' 'a\tmirror\ts|x|y|\t1234567890\tPR #1\n'
+check 'expect FAIL' 1 "line 1: field 4 (expect) 'FAIL' is too weak" 'a\tmirror\ts|x|y|\tFAIL\tPR #1\n'
+check 'expect with FAIL: in the middle' 1 "line 1: field 4 (expect) 'x FAIL: y z' is too weak" 'a\tmirror\ts|x|y|\tx FAIL: y z\tPR #1\n'
 check 'expect with the FAIL: prefix' 1 "line 1: field 4 (expect) 'FAIL: unrelated' is too weak" 'a\tmirror\ts|x|y|\tFAIL: unrelated\tPR #1\n'
 
 run='\tmirror\ts|clone|klone|\tstub test saw klone\tPR #1'

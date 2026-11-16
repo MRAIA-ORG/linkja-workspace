@@ -15,6 +15,7 @@ awk skips lines that start with a space	s{/\^#/ \|\|}{/^[# ]/ ||}	PR #72 review,
 caught check reads only the exit status	s{(\[ "\$status" -ne 0 \]) && printf .*?grep -qF "\$expect";}{$1;}	PR #72 review round 3, ticket #71
 no continue after changes nothing	s{(changes nothing in clone-all.sh"\n\s*failed=1\n)\s*continue\n}{$1}	PR #72 review round 4, ticket #71
 caught check accepts expect text outside a FAIL line	s{grep '\^FAIL: ' \| }{}	ticket #71
-no weak expect check	s{\n\s*if \(length\(\$4\) < 10 [^\n]*}{}	ticket #69
-weak expect check skips the length	s{length\(\$4\) < 10 \|\| }{}	ticket #69
+no weak expect check	s{\n\s*if \(length\(\$4\) < min [^\n]*}{}	ticket #69
+weak expect check skips the length	s{length\(\$4\) < min \|\| }{}	ticket #69
 weak expect check skips FAIL:	s{ \|\| index\(\$4, "FAIL:"\)}{}	ticket #69
+weak expect check rejects 10 characters	s{length\(\$4\) < min}{length(\$4) <= min}	ticket #69 review
