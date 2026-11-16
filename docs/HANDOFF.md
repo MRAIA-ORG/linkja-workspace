@@ -280,7 +280,7 @@ The open `lane` issues hold the tasks. List them with step 3 of Start here.
 
 ## 2026-11-15 (late): one PR template, mutation runner checks its data
 
-**What happened.** The org PR template now writes a lane as `MRAIA-ORG/linkja-workspace#<N>` in a code repo and `#<N>` in linkja-workspace (MRAIA-ORG/.github PR 2). linkja-workspace deleted its own copy and uses the org template (PR 70). Ticket 65 stays open for one box: the next code repo PR must show the template. The mutation runner checks every line of `scripts/clone-all-mutations.txt` before it clones, and reads a last line with no newline (PR 72, ticket 63). `scripts/test-mutations-data.sh` holds its recorded cases, offline. The handoff PR 66 was reviewed and merged. Ticket 59 closed after a throwaway PR proved the `linux` job fails on a broken script.
+**What happened.** The org PR template now writes a lane as `MRAIA-ORG/linkja-workspace#<N>` in a code repo and `#<N>` in linkja-workspace (MRAIA-ORG/.github PR 2). linkja-workspace deleted its own copy and uses the org template (PR 70). Ticket 65 stays open for one box: the next code repo PR must show the template. The mutation runner checks every line of `scripts/clone-all-mutations.txt` before it clones, and reads a last line with no newline (PR 72, ticket 63). `scripts/test-mutations-data.sh` holds its recorded cases, offline. A mutation gate records known breakages of the runner in `scripts/runner-mutations.txt`, and CI requires the data cases to fail on each (PR 75, housekeeping ticket 71). The review of PR 75 found six older runner guards that no case can fail (ticket 74). The handoff PR 66 was reviewed and merged. Ticket 59 closed after a throwaway PR proved the `linux` job fails on a broken script.
 
 **Decisions Claude made, open to the owner's overrule.**
 - Only a linkja-workspace PR can close a lane by itself. A code repo PR that finishes a lane writes `Lane: MRAIA-ORG/linkja-workspace#<N>. finished`, and the handoff pass lists it for the owner. The handoff skill accepts only `Lane: #<N>. finished`. Changing the skill was left to the owner.
@@ -289,6 +289,7 @@ The open `lane` issues hold the tasks. List them with step 3 of Start here.
 
 **Traps.**
 - **Tests of the mutation runner must stay offline.** Two reviewers and one fixer started real GitHub clone runs or a self-calling `sh` loop (PR 72 notes). Run cases only through `scripts/test-mutations-data.sh`, which copies the runner beside stubs. Use `{}` as perl delimiters when the pattern has `|`.
+- **The mutation gate records known breakages only.** Each new review of the runner has found one more. Expect that until ticket 74 is done.
 - **The merge hook checks for the review comment before the command runs.** A verdict comment and `gh pr merge` in one Bash call is blocked. Post the comment in its own call.
 - **`gh pr merge` once returned 401 with valid auth** (seen by this session on MRAIA-ORG/.github PR 2). A second try worked. Check `gh pr view <N> --json state` before you retry.
 
