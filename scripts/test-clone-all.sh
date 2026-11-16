@@ -66,9 +66,8 @@ while read -r repo; do
   [ "$(git -C "$dir/$repo" branch --show-current)" = "$want" ] || fail "$repo is not on $want"
 done < "$here/repos.txt"
 
-# Put linkja-core one commit behind, and give linkja-hashing a local change.
-# Add a new commit to the linkja-core mirror, so only a fetch can bring it in.
-git -C "$dir/linkja-core" reset --quiet --hard HEAD~1
+# Add a new commit to the linkja-core mirror. The clone stays where it is, so only
+# a fetch can show it as behind. Then give linkja-hashing a local change.
 mirror="$LINKJA_GIT_BASE/linkja-core.git"
 new_commit=$(git -C "$mirror" -c user.name=test -c user.email=test@example.invalid \
   commit-tree -p develop -m "new commit on the mirror" 'develop^{tree}')
