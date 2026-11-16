@@ -14,6 +14,8 @@ data="$here/clone-all-mutations.txt"
 # Prints the number of mutation lines in $1, or one FAIL line and exits 1.
 # A line needs exactly 5 tab-separated fields. A blank field (e.g. an expect of
 # one space) matches almost every FAIL line, so that check could never fail.
+# An expect shorter than 10 characters (e.g. "e") or with "FAIL:" in it (e.g.
+# "FAIL: x") also matches an unrelated FAIL line, so it cannot tie a failure to its mutation.
 check_data() {
   awk -F'\t' '
     /^#/ || $0 == "" { next }
@@ -22,6 +24,7 @@ check_data() {
       split("label source perl expect proof", name, " ")
       for (i = 1; i <= 5; i++)
         if ($i ~ /^[ \t]*$/) { printf "FAIL: %s line %d: field %d (%s) is blank\n", FILENAME, FNR, i, name[i]; bad = 1; exit 1 }
+      if (length($4) < 10 || index($4, "FAIL:")) { printf "FAIL: %s line %d: field 4 (expect) '\''%s'\'' is too weak: want 10 or more characters and no '\''FAIL:'\''\n", FILENAME, FNR, $4; bad = 1; exit 1 }
       if ($2 != "mirror" && $2 != "default") { printf "FAIL: %s line %d: unknown source '\''%s'\''\n", FILENAME, FNR, $2; bad = 1; exit 1 }
       n++
     }
