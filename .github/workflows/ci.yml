@@ -20,5 +20,7 @@ jobs:
           persist-credentials: false
       - name: Mutation data file checks
         run: scripts/test-mutations-data.sh
+      - name: Mutation gate for the runner
+        run: scripts/test-runner-mutations.sh
       - name: Clone test and its mutations
         run: scripts/test-clone-all-mutations.sh
