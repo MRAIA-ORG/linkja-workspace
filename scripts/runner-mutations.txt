@@ -19,3 +19,8 @@ no weak expect check	s{\n\s*if \(length\(\$4\) < min [^\n]*}{}	ticket #69
 weak expect check skips the length	s{length\(\$4\) < min \|\| }{}	ticket #69
 weak expect check skips FAIL:	s{ \|\| index\(\$4, "FAIL:"\)}{}	ticket #69
 weak expect check rejects 10 characters	s{length\(\$4\) < min}{length(\$4) <= min}	ticket #69 review
+mirror and default swapped	s{mirror\)(.*\n\s*)default\)}{default)$1mirror)}	ticket #74
+baseline failure ignored	s{ \|\| \{ echo "FAIL: the test fails on clone-all.sh as it is"; exit 1; \}}{ || true}	ticket #74
+no mirrors check deleted	s{\n\[ -d "\$copies" \][^\n]*}{}	ticket #74
+default address check deleted	s{\n\[ "\$GIT_CONFIG_VALUE_0" != / \][^\n]*}{}	ticket #74
+LINKJA_GIT_BASE not unset	s{\nunset LINKJA_GIT_BASE\n}{\n}	ticket #74

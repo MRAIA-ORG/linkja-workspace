@@ -9,6 +9,7 @@ set -eu
 
 here=$(cd "$(dirname "$0")" && pwd)
 data="$here/runner-mutations.txt"
+tab=$(printf '\t')
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 trap 'exit 1' INT TERM
@@ -19,17 +20,37 @@ cases() {
   perl -e 'alarm 60; exec @ARGV' -- sh "$1/test-mutations-data.sh" >"$1/out" 2>&1 </dev/null
 }
 
+# check_entry LABEL PERL PROOF FILE: prints one FAIL line and returns 1 when
+# the entry has no proof, or when its pattern does not match FILE exactly once.
+# perl -0pi changes only the first match, so a second match would go untested.
+check_entry() {
+  [ -n "$3" ] || { echo "FAIL: '$1' has no proof field"; return 1; }
+  matches=$(perl -0ne "print 0 + ${2}g" "$4")
+  [ "$matches" -eq 1 ] || { echo "FAIL: '$1' ($3) matches $matches times in $4, want 1"; return 1; }
+}
+
+# Recorded cases for check_entry. Each entry must be refused.
+printf 'aa\n' > "$work/text"
+for bad in "no proof${tab}s{aa}{b}${tab}" "two matches${tab}s{a}{b}${tab}ticket #74"; do
+  IFS=$tab read -r label expr proof <<EOF
+$bad
+EOF
+  if check_entry "$label" "$expr" "$proof" "$work/text" >/dev/null; then
+    echo "FAIL: the gate accepts the entry '$label'"
+    exit 1
+  fi
+done
+
 mkdir "$work/base"
 cp "$here/test-clone-all-mutations.sh" "$here/test-mutations-data.sh" "$work/base/"
 cases "$work/base" || { cat "$work/base/out"; echo "FAIL: the data cases fail on the runner as it is"; exit 1; }
 
-tab=$(printf '\t')
 failed=0
 n=0
 while IFS=$tab read -r label expr proof || [ -n "$label" ]; do
   case $label in '' | '#'*) continue ;; esac
   n=$((n + 1))
-  [ -n "$proof" ] || { echo "FAIL: '$label' has no proof field"; failed=1; continue; }
+  check_entry "$label" "$expr" "$proof" "$here/test-clone-all-mutations.sh" || { failed=1; continue; }
   run="$work/mutation-$n"
   mkdir "$run"
   cp "$here/test-clone-all-mutations.sh" "$here/test-mutations-data.sh" "$run/"
