@@ -13,3 +13,4 @@ wrong default org	default	s|https://github.com/MRAIA-ORG}|https://github.com/no-
 old linkja org as default	default	s|https://github.com/MRAIA-ORG}|https://github.com/linkja}|	cannot mirror linkja-workspace	PR #60 review round 1
 fixed base after the base= line	mirror	s|^(base=.*)$|$1\nbase=https://github.com/MRAIA-ORG|m	was not cloned from	PR #60 review round 2
 override name typo	mirror	s|LINKJA_GIT_BASE:-|LINKJA_GITBASE:-|	was not cloned from	PR #60 review round 1
+fetch deleted	mirror	s{  git -C "\$parent/\$1" fetch --quiet --prune origin\n}{}	did not fetch the new commit	ticket #58
