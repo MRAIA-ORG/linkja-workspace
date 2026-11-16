@@ -327,3 +327,38 @@ The open `lane` issues hold the tasks. List them with step 3 of Start here.
 **Waits on the owner.**
 - **Must a code repo PR close a lane by itself?** Then the yw-workflow handoff skill must accept `Lane: MRAIA-ORG/linkja-workspace#<N>. finished`.
 - Optional: overrule any decision Claude made above.
+
+## 2026-11-16: roadmap, run config (step 1) and four hashing fixes
+
+**What happened.** The roadmap for the run config and linkage functions merged (PR 86), with one ticket per step (tickets 89 to 95) and lane 87. In linkja-hashing, five PRs merged into `develop`: two columns for one field stop every run (PR 3, ticket 88), the run config and column map (PR 4, ticket 95, step 1), the list of birth date formats that read (PR 5, ticket 97), clearer run config error messages (PR 6, ticket 98), and a failed run removes the output files it made (PR 7, ticket 96). Ticket 99 (a failed run can exit 0) is built on a local branch and waits for review: see lane 87.
+
+**Decisions (owner, 2026-11-16).**
+- The roadmap order (config first) and the 3-year spread for one-time costs. Local planning files stay in the gitignored `internal/` folder. The owner gives the hash rule list and the default majority thresholds at the design reviews of steps 3 and 4.
+- No change to the hashing or crypto algorithm (hash rules, salt use, secure hash, the C library, normalized output, match rules) unless the owner agrees first. Input handling (which column, how a date is read, when a run stops) is allowed.
+- Ticket 97: hashing output stays exactly as today. Removing `MMdduuuu` from the date pattern would make one rare value stop reading (a date, a time, then the same date again, e.g. `12/31/2001 23:59:5912312001`). So the pattern stays, and the fix is the README list plus tests that pin today's behavior.
+
+**Decisions Claude made, open to the owner's overrule.**
+- Two columns for one field stop every run, before any output. A silent pick can hash a column the site did not mean.
+- An unknown run config key stops the run. A typo such as `input.date_fromat` would else fall back to the default formats and hash 3 February as 2 March.
+- A failed run removes its files, and does not rename them, because the crosswalk and invalid-data files hold patient IDs. A run never opens a file that is already there (`CREATE_NEW`), so two runs in the same second stop instead of overwriting.
+- A birth date format with a zone offset or zone name is accepted. The date is kept as written and the zone is not applied.
+
+**Traps.**
+- **Roadmap step 2 order.** Step 2 (hash file format v2) folds in ticket 21 and waits on tickets 11, 15 and 16. Steps 3 and 5 build on v2. v2 is released only after step 5, so no site holds a v2 file without site keys. Step 3 keeps the last-4 SSN field and adds the 9-digit SSN as a separate field. Step 5 starts with ADR 0002.
+- **The programs use released linkja-core 1.1.0.** A ticket that changes linkja-core runs `mvn -q install` in it first and moves each program pom. linkja-matching has no `src/test/java`.
+- **No full hashing run on an arm64 Mac.** The test secret C library is x86_64 only, and CI builds the public library. Tests stub the secure hash through the package-private `createSecureHash` and `revertSecureHash` in `Engine`.
+- **The default birth date pattern is a chain of optional sections**, tried in turn from where the last one stopped. A change to any section can change which rows hash. The pin tests in `ValidationFilterStepTest` catch it.
+- **Restoring a mutated file with its old timestamp lets Maven use a stale class.** Run `mvn clean` after each restore. Restore from a backup copy, never with `git checkout` of a file that holds your edits: a fixer lost its fix that way.
+- **In zsh, Maven flags in an unquoted variable are not split**, so `-Dnative.lib.dir` is lost and the run fails with `UnsatisfiedLinkError`. Put the flags on the command line.
+- **A rebase that resolves a conflict changes the work**, so it needs a review round even after a PASS. Tickets 97 and 98 both edited the README run config section.
+- **A `Fixes MRAIA-ORG/linkja-workspace#N` line in a linkja-hashing PR closes the ticket on merge**, because `develop` is the default branch of linkja-hashing.
+- **Files over the module size limit:** `RunConfigTest.java`, `ValidationFilterStepTest.java` and `Engine.java`. Split them in a task that changes their structure.
+
+**Next.**
+
+The open `lane` issues hold the tasks. List them with step 3 of Start here.
+
+**Waits on the owner.**
+- The design review answers for tickets 90 and 91, and the reviewer contact for ticket 94 (lane 87).
+- **Must a code repo PR close a lane by itself?** (carried from 2026-11-15)
+- Optional: overrule any decision Claude made above.
