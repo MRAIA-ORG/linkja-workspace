@@ -16,8 +16,35 @@ data="$here/clone-all-mutations.txt"
 # one space) matches almost every FAIL line, so that check could never fail.
 # An expect shorter than min characters (e.g. "e") or with "FAIL:" in it (e.g.
 # "FAIL: x") also matches an unrelated FAIL line, so it cannot tie a failure to its mutation.
+# The expect must also match exactly one fail "..." message in test-clone-all.sh.
+# A message word with "$" in it (e.g. $repo) is a variable and stands for any
+# one word. The expect lines up with whole words of the message. Only its first
+# word may be the end of a word, and only its last word the start of one. It
+# must line up with message text in one word or more, so that "aaaaaaaaaa"
+# matches no message, and "was not cl" matches two ("$repo was not cloned ...").
 check_data() {
-  awk -v min=10 -F'\t' '
+  awk -v min=10 -v tests="$here/test-clone-all.sh" -F'\t' '
+    function hits(e,   c, i, j, k, p, q, w, ew, mw, ok, lit) {
+      p = split(e, ew, " ")
+      for (i = 1; i <= m; i++) {
+        q = split(msg[i], mw, " ")
+        for (j = 0; j + p <= q; j++) {
+          ok = 1; lit = 0
+          for (k = 1; k <= p && ok; k++) {
+            w = mw[j + k]
+            if (index(w, "$")) continue
+            lit = 1
+            if (p == 1) ok = index(w, ew[k]) > 0
+            else if (k == 1) ok = substr(w, length(w) - length(ew[k]) + 1) == ew[k]
+            else if (k == p) ok = index(w, ew[k]) == 1
+            else ok = w == ew[k]
+          }
+          if (ok && lit) { c++; break }
+        }
+      }
+      return c + 0
+    }
+    BEGIN { while ((getline line < tests) > 0) if (match(line, /fail "[^"]*"/)) msg[++m] = substr(line, RSTART + 6, RLENGTH - 7) }
     /^#/ || $0 == "" { next }
     NF != 5 { printf "FAIL: %s line %d has %d fields, want 5 separated by one tab\n", FILENAME, FNR, NF; bad = 1; exit 1 }
     {
@@ -26,6 +53,7 @@ check_data() {
         if ($i ~ /^[ \t]*$/) { printf "FAIL: %s line %d: field %d (%s) is blank\n", FILENAME, FNR, i, name[i]; bad = 1; exit 1 }
       if (length($4) < min || index($4, "FAIL:")) { printf "FAIL: %s line %d: field 4 (expect) '\''%s'\'' is too weak: want %d or more characters and no '\''FAIL:'\''\n", FILENAME, FNR, $4, min; bad = 1; exit 1 }
       if ($2 != "mirror" && $2 != "default") { printf "FAIL: %s line %d: unknown source '\''%s'\''\n", FILENAME, FNR, $2; bad = 1; exit 1 }
+      if ((h = hits($4)) != 1) { printf "FAIL: %s line %d: field 4 (expect) '\''%s'\'' matches %d FAIL messages in %s, want exactly 1\n", FILENAME, FNR, $4, h, tests; bad = 1; exit 1 }
       n++
     }
     END { if (bad) exit 1; if (!n) { printf "FAIL: no mutations in %s\n", FILENAME; exit 1 }; print n }

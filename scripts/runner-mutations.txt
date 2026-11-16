@@ -24,3 +24,10 @@ baseline failure ignored	s{ \|\| \{ echo "FAIL: the test fails on clone-all.sh a
 no mirrors check deleted	s{\n\[ -d "\$copies" \][^\n]*}{}	ticket #74
 default address check deleted	s{\n\[ "\$GIT_CONFIG_VALUE_0" != / \][^\n]*}{}	ticket #74
 LINKJA_GIT_BASE not unset	s{\nunset LINKJA_GIT_BASE\n}{\n}	ticket #74
+expect may match two FAIL messages	s{\(h = hits\(\$4\)\) != 1}{(h = hits(\$4)) > 1}	ticket #76
+expect may match no FAIL message	s{\(h = hits\(\$4\)\) != 1}{(h = hits(\$4)) < 1}	ticket #76
+expect may match only variables	s{if \(ok && lit\)}{if (ok)}	ticket #76
+variable is not a wildcard	s{\n\s*if \(index\(w, "\$"\)\) continue}{}	ticket #76
+one-word expect must be a whole word	s{if \(p == 1\) ok = index\(w, ew\[k\]\) > 0}{if (p == 1) ok = w == ew[k]}	ticket #76
+first word must be a whole word	s{else if \(k == 1\) ok = [^\n]*}{else if (k == 1) ok = w == ew[k]}	ticket #76
+last word must be a whole word	s{else if \(k == p\) ok = [^\n]*}{else if (k == p) ok = w == ew[k]}	ticket #76
