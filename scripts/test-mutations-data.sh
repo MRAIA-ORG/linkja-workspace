@@ -10,6 +10,9 @@ here=$(cd "$(dirname "$0")" && pwd)
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 failed=0
+# The runner must unset this before its base run, so every full case sets it.
+LINKJA_GIT_BASE=https://example.invalid/wrong
+export LINKJA_GIT_BASE
 
 # Every case runs a copy of the runner next to stub files, so a runner that
 # goes past --check runs the stubs and clones nothing. The runner finds its
@@ -17,10 +20,30 @@ failed=0
 dir="$work/stubs"
 mkdir "$dir"
 cp "$here/test-clone-all-mutations.sh" "$dir/"
-# shellcheck disable=SC2016 # the stub expands its variables when it runs
-printf '#!/bin/sh\necho "note: stub test ran"\nif grep -q klone "$(dirname "$0")/clone-all.sh"; then echo "FAIL: stub test saw klone"; exit 1; fi\nif [ -n "${1-}" ]; then mkdir -p "$1/mirrors"; fi\n' > "$dir/test-clone-all.sh"
-# shellcheck disable=SC2016 # the runner reads the default address from this line
-printf 'base=${LINKJA_GIT_BASE:-https://example.invalid/org}\necho clone\n' > "$dir/clone-all.sh"
+# The stub prints the address it would mirror from, i.e. LINKJA_GIT_BASE or
+# the default. Its base run (the one with a folder) must get no LINKJA_GIT_BASE,
+# and makes no mirrors when clone-all.sh has the word "nomirrors".
+cat > "$dir/test-clone-all.sh" <<'STUB'
+#!/bin/sh
+fail() { echo "FAIL: $*"; exit 1; }
+echo "note: stub test ran"
+script="$(dirname "$0")/clone-all.sh"
+src=${LINKJA_GIT_BASE:-https://example.invalid/org}
+if [ -n "${1-}" ]; then
+  [ -z "${LINKJA_GIT_BASE-}" ] || fail "stub base run got LINKJA_GIT_BASE"
+  grep -q nomirrors "$script" || mkdir -p "$1/mirrors"
+fi
+if grep -q klone "$script"; then fail "stub test saw klone from $src"; fi
+STUB
+# clone_all TEXT: writes TEXT and "echo clone" into the stub clone-all.sh.
+# The runner reads the default address from the base= line.
+clone_all() {
+  # shellcheck disable=SC2059 # the text is the format, so \n becomes a newline
+  printf "$1\necho clone\n" > "$dir/clone-all.sh"
+}
+# shellcheck disable=SC2016 # the stub clone-all.sh expands it
+base='base=${LINKJA_GIT_BASE:-https://example.invalid/org}'
+clone_all "$base"
 : > "$dir/repos.txt"
 chmod +x "$dir/test-clone-all.sh"
 
@@ -85,6 +108,13 @@ full 'full run: last line without newline' 0 'PASS: all 2 mutations caught' "a$r
 full 'expect text the stub never prints' 1 'not caught' 'a\tmirror\ts|clone|klone|\tnever printed\tPR #1\n' 0
 full 'expect text only outside a FAIL line' 1 'not caught' 'a\tmirror\ts|clone|klone|\tstub test ran\tPR #1\n' 0
 full 'mutation that changes nothing is not run' 1 'changes nothing in clone-all.sh' 'a\tmirror\ts|no such text|x|\tsome test text\tPR #1\n' 0 '== mutation'
+full 'default line clones from the default address' 0 'PASS: all 1 mutations caught' 'a\tdefault\ts|clone|klone|\tsaw klone from https://example.invalid/org\tPR #1\n' 1
+clone_all "$base\n# klone"
+full 'base run fails' 1 'the test fails on clone-all.sh as it is' "a$run\n" 0
+clone_all "$base\n# nomirrors"
+full 'base run makes no mirrors' 1 'FAIL: no mirrors at' "a$run\n" 0
+clone_all '# no base line'
+full 'no default address in clone-all.sh' 1 'cannot read the default address' "a$run\n" 0
 
 [ "$failed" -eq 0 ] || exit 1
 echo "PASS: all data cases"
