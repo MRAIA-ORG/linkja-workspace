@@ -300,3 +300,30 @@ The open `lane` issues hold the tasks. List them with step 3 of Start here.
 **Waits on the owner.**
 - **Must a code repo PR close a lane by itself?** Then the yw-workflow handoff skill must accept `Lane: MRAIA-ORG/linkja-workspace#<N>. finished`.
 - Optional: overrule any decision Claude made above.
+
+## 2026-11-15 (wrap): workspace chores done, pom URL moved
+
+**What happened.** The pom `<url>` of linkja-core and linkja-crypto names the MRAIA-ORG repo (linkja-core PR 4, linkja-crypto PR 3, ticket 68). Those two PRs were the first code repo PRs under the org template. GitHub reports the org template as the PR template of linkja-core, so ticket 65 closed. The clone test fails when `clone-all.sh` does not fetch, and when it fetches only for a clone that already looks behind (PRs 78 and 80, tickets 58 and 77). The mutation runner refuses an `expect` text that is short, holds `FAIL:`, or does not match exactly one `fail "..."` message in `scripts/test-clone-all.sh` (PRs 79 and 82, tickets 69 and 76). Five older runner guards got cases that fail, and the gate refuses an entry with no proof or a pattern that matches more than once (PR 82, ticket 74). Ticket 81 is open: a perl field with two substitutions joined by `;` is not fully checked.
+
+**Decisions (owner, 2026-11-15).**
+- The pom `<url>` names `https://github.com/MRAIA-ORG/<repo>`. The next release of each library publishes it in its pom.
+- Ticket 81 is parked in lane 53. The owner chose to move to product work. Each runner review has found one more gap, so a review of the fix for 81 will likely file one more.
+
+**Decisions Claude made, open to the owner's overrule.**
+- Tickets 74 and 76 went into one PR with one commit each, rebase-merged. Both change the same three scripts.
+- Ticket 74 items 2 and 8 are rejected (PR 82 body). Item 2: no input makes the run count differ from the line count. Item 8: CI runs the data cases in the step before the gate.
+- Short reviews for small diffs: a reviewer on a one-line or four-line change gets a narrow brief. The owner asked why reviews take long. The time goes to hand mutation of the check, not to long tests.
+
+**Traps.**
+- **The runner gate takes about 55 seconds.** It took about 22 before PR 82. Each entry reruns all data cases. It runs in CI only. Running entries in parallel would cut it.
+- **A reviewer left a perl probe that waited on stdin, with a backup and edit of the runner in its command.** The worktree was clean when it was stopped. Tell reviewers not to leave a process waiting on stdin, and check `git status` in the review worktree after one stops.
+- **A PR with two `Closes` lines closed the second ticket a few seconds late.** Check `gh issue view <N> --json state` again before you close it by hand.
+- Superseded 2026-11-15 (wrap): "The mutation gate records known breakages only. Expect that until ticket 74 is done." Ticket 74 is done, and its review still found one more gap (ticket 81). Expect it on the next runner change too.
+
+**Next.**
+
+The open `lane` issues hold the tasks. List them with step 3 of Start here.
+
+**Waits on the owner.**
+- **Must a code repo PR close a lane by itself?** Then the yw-workflow handoff skill must accept `Lane: MRAIA-ORG/linkja-workspace#<N>. finished`.
+- Optional: overrule any decision Claude made above.
