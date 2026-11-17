@@ -29,14 +29,15 @@ if [ "${GOLDEN_UPDATE:-}" = 1 ] && [ -n "${GOLDEN_RULES:-}" ]; then
 fi
 
 # The site IDs come from the input file names, hashes_<site ID>.csv. Each row
-# must have the same ID in its siteid column, the first column.
+# must have the same ID in its siteid column, the first column. The ""
+# makes awk compare text, so "2" is not the same ID as "002".
 export LC_ALL=C # glob order, so the sites load in the same order everywhere
 set -- "$expected"/input/hashes_*.csv
 [ $# -eq 2 ] || fail "expected two input files in $expected/input, found: $*"
 for f in "$@"; do
   site=${f##*/hashes_}
   site=${site%.csv}
-  awk -F, -v s="$site" 'NR > 1 && $1 != s { exit 1 }' "$f" || fail "a row of $f has a siteid other than $site"
+  awk -F, -v s="$site" 'NR > 1 && $1 "" != s { exit 1 }' "$f" || fail "a row of $f has a siteid other than $site"
 done
 
 work=$(mktemp -d)

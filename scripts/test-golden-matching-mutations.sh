@@ -21,7 +21,11 @@ trap 'rm -rf "$work"' EXIT
 trap 'exit 1' INT TERM
 # Every match rule but the last one.
 fewer=0,1,2,3,4,5,6,7,8,9,10,11
-cases="fewer_rules update_fewer_rules siteid_differs"
+# Every match rule but rule 4. Rule 4 is the only link of one pair, so
+# report.txt changes too.
+no_rule4=0,1,2,3,5,6,7,8,9,10,11,12
+cases="fewer_rules fewer_groups update_fewer_rules siteid_differs"
+cases="$cases siteid_first_row siteid_middle_row siteid_numeric"
 
 # copy DIR: a copy of the script and its expected files, in the repo layout.
 copy() {
@@ -40,6 +44,10 @@ caught() {
     want="FAIL: rules.txt differs"
     GOLDEN_RULES=$fewer sh "$script" "$parent" >"$1/out" 2>&1 </dev/null || status=$?
     ;;
+  fewer_groups)
+    want="FAIL: report.txt differs"
+    GOLDEN_RULES=$no_rule4 sh "$script" "$parent" >"$1/out" 2>&1 </dev/null || status=$?
+    ;;
   update_fewer_rules)
     want="FAIL: GOLDEN_UPDATE=1 with GOLDEN_RULES"
     GOLDEN_UPDATE=1 GOLDEN_RULES=$fewer sh "$script" "$parent" >"$1/out" 2>&1 </dev/null || status=$?
@@ -50,6 +58,21 @@ caught() {
     want="FAIL: a row of"
     input="$1/tests/golden-matching/input"
     mv "$input/hashes_002.csv" "$input/hashes_003.csv"
+    sh "$script" "$parent" >"$1/out" 2>&1 </dev/null || status=$?
+    ;;
+  siteid_first_row | siteid_middle_row)
+    # One row with siteid 003: the first data row, or one in the middle.
+    want="FAIL: a row of"
+    line=2
+    [ "$2" = siteid_first_row ] || line=300
+    perl -pi -e "s/^002,/003,/ if \$. == $line" "$1/tests/golden-matching/input/hashes_002.csv"
+    sh "$script" "$parent" >"$1/out" 2>&1 </dev/null || status=$?
+    ;;
+  siteid_numeric)
+    # The file name says 2, the rows say 002. As numbers they are the same.
+    want="FAIL: a row of"
+    input="$1/tests/golden-matching/input"
+    mv "$input/hashes_002.csv" "$input/hashes_2.csv"
     sh "$script" "$parent" >"$1/out" 2>&1 </dev/null || status=$?
     ;;
   esac

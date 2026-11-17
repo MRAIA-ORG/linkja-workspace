@@ -1,11 +1,11 @@
     Match Rule 0 hash1 records processed: 1199  matches found: 44
     Match Rule 0 hash2 records processed: 1199  matches found: 42
-    Match Rule 0 hash3 records processed: 1199  matches found: 192
-    Match Rule 0 hash4 records processed: 1199  matches found: 190
+    Match Rule 0 hash3 records processed: 1199  matches found: 191
+    Match Rule 0 hash4 records processed: 1199  matches found: 189
     Match Rule 0 hash5 records processed: 1199  matches found: 42
-    Match Rule 0 hash6 records processed: 1199  matches found: 190
+    Match Rule 0 hash6 records processed: 1199  matches found: 189
     Match Rule 0 hash7 records processed: 1199  matches found: 43
-    Match Rule 0 hash8 records processed: 1199  matches found: 191
+    Match Rule 0 hash8 records processed: 1199  matches found: 190
     Match Rule 0 hash9 records processed: 1199  matches found: 42
     Match Rule 0 hash10 records processed: 1199  matches found: 42
     Match Rule 1 hash1 records processed: 1199  matches found: 44
@@ -13,19 +13,19 @@
     Match Rule 1 hash5 records processed: 1199  matches found: 42
     Match Rule 1 hash9 records processed: 1199  matches found: 42
     Match Rule 1 hash10 records processed: 1199  matches found: 42
-    Match Rule 2 hash3 records processed: 1199  matches found: 192
-    Match Rule 2 hash4 records processed: 1199  matches found: 190
-    Match Rule 2 hash6 records processed: 1199  matches found: 190
+    Match Rule 2 hash3 records processed: 1199  matches found: 191
+    Match Rule 2 hash4 records processed: 1199  matches found: 189
+    Match Rule 2 hash6 records processed: 1199  matches found: 189
     Match Rule 3 records processed: 1199  matches found: 44
     Match Rule 4 found: 1 patient matches
     Match Rule 5 found: 3 patient matches
     Match Rule 6 found: 1 patient matches
     Match Rule 7 found: 1 patient matches
-    Match Rule 8 records processed: 1199  matches found: 192
+    Match Rule 8 records processed: 1199  matches found: 191
     Match Rule 9 found: 1 patient matches
     Match Rule 10 found: 21 patient matches
     Match Rule 11 records processed: 1199  matches found: 43
-    Match Rule 12 records processed: 1199  matches found: 191
+    Match Rule 12 records processed: 1199  matches found: 190
     Found 199 matching patient groups
     consolidated matching patient groups to 199
     Assigned 199 new global ids to matching patients

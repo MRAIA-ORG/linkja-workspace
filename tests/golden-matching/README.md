@@ -30,7 +30,7 @@ No row isolates rules 0, 1, 2, 3, 8, 11 or 12. Rule 0 compares each of the ten h
 
 ## Rows that differ in some columns
 
-Six more rows of site 002 differ from their site 001 partner in some columns. The other columns still link each pair. These rows catch a match rule that reads the incorrect column, e.g. rule 3 reading hash2 in place of hash1. Each changed column got a fresh value with the label scheme above. The rule in the label is a rule that reads that column.
+Seven more rows of site 002 differ from their site 001 partner in some columns. The other columns still link each pair. These rows catch a match rule that reads the incorrect column, e.g. rule 3 reading hash2 in place of hash1. Each changed column got a fresh value with the label scheme above. The rule number in the label is only a tag that keeps the fresh values of different rows apart. E.g. line 37 has the label rule 3 on hash2, but rule 3 reads only hash1.
 
 | Site 002 line | Site 001 line | Label rule | Changed columns |
 |---|---|---|---|
@@ -40,7 +40,10 @@ Six more rows of site 002 differ from their site 001 partner in some columns. Th
 | 2 | 403 | 8 | hash3, hash4, hash6 |
 | 3 | 404 | 12 | hash4, hash6, hash8 |
 | 4 | 405 | 0 | hash4, hash6, hash8 |
+| 44 | 445 | 3 | hash3, hash4, hash6, hash8 |
 
-So of the 45 pairs with all ten columns, 1 differs in hash1, 2 in hash7 and 3 in each of hash2, hash5, hash9 and hash10. Of the 193 pairs with hash3, 1 differs in hash3, 2 in hash8 and 3 in each of hash4 and hash6. Rules 3, 8, 11 and 12 each read one column: hash1, hash3, hash7 and hash8. Each of these columns has its own match count in `rules.txt`. Every other column of its group has rows that differ. So the count of the rule changes when it reads another column, also when it still scans in the order of its own column.
+So of the 45 pairs with all ten columns, 1 differs in hash1, 2 in hash7 and 3 in each of hash2, hash5, hash9 and hash10. Of the 193 pairs with hash3, 2 differ in hash3, 3 in hash8 and 4 in each of hash4 and hash6. Rules 3, 8, 11 and 12 each read one column: hash1, hash3, hash7 and hash8. Each of these columns has its own match count in `rules.txt`. So the count of the rule changes when it reads another column and scans in the order of that column.
+
+When the rule still scans in the order of its own column, it compares each row only with the row before it. The two rows of a pair are next to each other, because they agree on that column. So the rule counts the pairs that agree on its own column and on the column it reads in error. For each of the four rules and each of the other nine columns, some pair agrees on the rule column and has no shared value in the other column (the values differ, or one is empty). E.g. line 44 agrees with its partner on hash1 and hash7, and differs in hash3, hash4, hash6 and hash8. Without line 44, rule 3 reading hash3 or hash8, and rule 11 reading hash8, gave the same counts as the correct rules.
 
 Rules 4, 5, 6, 7, 9 and 10 need no such rows. When one of them reads another column, the pair that only it links loses its link, so `report.txt` changes. E.g. rule 4 reading hash9 in place of hash2 gives 198 matching patient groups in place of 199.
