@@ -386,3 +386,38 @@ The open `lane` issues hold the tasks. List them with step 3 of Start here. Lane
 - The design review answers for tickets 90 and 91, and the reviewer contact for ticket 94 (lane 87).
 - **Must a code repo PR close a lane by itself?** (carried from 2026-11-15)
 - Optional: overrule any decision Claude made above.
+
+## 2026-11-17: golden hashing test, roles page, security policy, releases
+
+Merged: the golden test of hashing (#10), the page of who holds which key, salt and library (#104, `docs/roles.md`), the org security policy with Dependabot (#105, six repos), and a release job for linkja-hashing (#103). The golden test of matching (#11) is built but waits on two owner questions (lane 52).
+
+**Where the new tickets came from.** A 2024 security office review of linkja asked sites to get it only from the primary site, check each update, and watch for vulnerability news. That gave #103 (releases a site can check), #104 and #105. The owner chose these three on 2026-11-17 and approved the weekly Dependabot schedule.
+
+**Decisions Claude made, open to the owner's overrule.**
+- Private vulnerability reporting is on in all 11 public MRAIA-ORG repos, not only the five code repos the ticket named. The org policy points every reader at that button. Undo per repo: `gh api -X DELETE repos/MRAIA-ORG/<repo>/private-vulnerability-reporting`.
+- The golden hashing expected files come from the `develop` tips, because no program has a GitHub release yet.
+- A release needs an annotated `vX.Y.Z` tag, with a message, on the commit the run assembles. A plain tag stops it, so the notes never say "no security fix" without a basis.
+
+**Traps.**
+- **The golden tests run committed `HEAD` of the sibling clones.** An uncommitted edit is not tested. To test a code change, commit it in a scratch clone.
+- **Row order in the golden hashing test holds only because `batchSize = 10000`** in linkja-hashing's `config.properties` is larger than the 1000 test rows (#109 adds a guard).
+- **The `golden-hashing` CI job is not a required check**, and program repos do not run it. A program PR that changes hash values merges, and the next workspace PR fails.
+- **Hashing rejects one row of the matching test's site 2, and it is a shared patient**, so matching finds 199 groups and not 200.
+- **One removed match rule does not change Global IDs** in the test data, because rules 0, 2 and 8 each find every shared group. Only the per-rule counts catch it.
+- **The merge guard blocks `gh pr merge` with `cd` in the same command**, and blocks a merge of 25 or more lines until the review verdict is a PR comment. Post the verdict with `gh pr comment`, then run `gh pr merge <N> -R <owner/repo>` alone.
+- **`git -C <clone> worktree add` with a relative path puts the worktree one folder too deep.** Use an absolute path.
+- **The salt file is plain text, but the code calls it "encrypted"** in the salt engine help, a variable name and a hashing error message (`docs/roles.md` lists the lines). Not ticketed.
+- **No program writes the aggregator key pair**, only a test. Not ticketed.
+
+**Slice work small.** On 2026-11-17 the owner asked if work was being cut down. One builder had three repos and one review had six. Give each builder one repo and one change that one review can cover, then copy the pattern.
+
+**Next.**
+
+The open `lane` issues hold the tasks. List them with step 3 of Start here.
+
+**Waits on the owner.**
+- The two questions on the golden matching test (lane 52).
+- Should the `golden-hashing` CI job be a required check, and should program repos run it too (lane 52)?
+- When to push the first linkja-hashing release tag.
+- The design review answers for tickets 90 and 91, and the reviewer contact for ticket 94 (lane 87).
+- **Must a code repo PR close a lane by itself?** (carried from 2026-11-15)
