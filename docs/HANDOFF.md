@@ -421,3 +421,41 @@ The open `lane` issues hold the tasks. List them with step 3 of Start here.
 - When to push the first linkja-hashing release tag.
 - The design review answers for tickets 90 and 91, and the reviewer contact for ticket 94 (lane 87).
 - **Must a code repo PR close a lane by itself?** (carried from 2026-11-15)
+
+## 2026-11-17 (late): golden tests complete, crypto seam, first hash file writer
+
+Merged in linkja-workspace: the five guards of the golden hashing test (#109, PR #114), the golden test of matching (#11, PR #116) and its follow-ups (#115, PR #121). Merged into `develop`: the crypto seam (#12, linkja-core PR 8) and its test gaps (#117, linkja-core PR 9), the hash rule list and hash file writer (#14 slice A, linkja-core PR 10), the dead code removal (#13, linkja-hashing PR 13) and two unused imports (#118, linkja-hashing PR 14).
+
+**Owner decisions, 2026-11-17.**
+- The golden matching test reads two committed decrypted CSV files (committed, no `.gitignore` entry).
+- Its test data gets rows so that a removed or misread match rule fails the test.
+- The `golden-hashing` and `golden-matching` jobs become required checks, and the program repos run them too (#112).
+- #12 and #13 may touch crypto and hashing code, on the condition that no output changes. The golden tests proved it before and after.
+- #14 starts before the linkja-core release. The first linkja-hashing release tag comes after #14 to #17 merge (recorded on #103).
+- An empty or null PIDHASH stops the hash file writer with an error. Today's code writes 0 bytes there and breaks the file. Today's hashing never makes an empty PIDHASH, so ADR 0001 holds with no exception.
+- CI may assemble linkja-crypto with the published test secret, so the secrets test runs in CI (#119).
+- Add a Windows x64 CI job to linkja-crypto, from the script on branch `win-build-develop` (recorded on #2, lane 51).
+
+**Decisions Claude made, open to the owner's overrule.**
+- #14 is cut into two slices. Slice A (rule list, writer, byte test) is merged. Slice B (reader, bad header errors, callers, release) stays on #14.
+- The v1 reference file for the writer test comes from unchanged linkja-hashing develop and linkja-core 1.1.0, run on a patched scratch C library: a fixed session key, RSA as `LOCKED(data)`, and the FakeCrypto secret. So the byte test runs on FakeCrypto alone in CI. The steps are in linkja-core `src/test/resources/hashfile-v1/README.md`, and a reviewer made the files again byte for byte.
+- Bouncy Castle moved to test scope in linkja-core. No program uses it at run time.
+
+**Traps.**
+- **A match rule in linkja-matching links on any one column of its list**, and compares a row only with the row before it in its index order. The `matchRule` text reads like an AND. So rules 0, 1, 2, 3, 8, 11 and 12 cannot be the only link of a pair, and test data for a rule must keep the pair adjacent in that order.
+- **Correction to the earlier 2026-11-17 trap:** the test data has 1001 patients, so the 600/600 split shares 199. The patient that hashing rejects is at site 002 only. It is not a shared patient.
+- **The hash file column order is not `HashingStep.HASH_FIELDS` order.** It is the order `Engine.writeDataRowResult` writes. linkja-matching reads by position, so `HashRule` follows the file.
+- **The golden hashing data has no derived rows** (`PermuteStep(false)`), so derived-row output is covered only by unit tests.
+- **The public C library throws on `createSecureHash`**, so CI never runs the real secure hash until #119.
+- **On macOS, cmake needs `JAVA_HOME`**, e.g. `$(brew --prefix openjdk@25)/libexec/openjdk.jdk/Contents/Home`, or it says "Could NOT find Java".
+- **After a Java mutation run, run `mvn clean`.** A restored source with an old mtime leaves the mutant `.class` in `target/`, and the next run tests the incorrect code.
+- **awk compares a numeric field with a numeric `-v` value as numbers.** `$1 "" != s` forces text.
+- **The commit hook reads the branch of the shell folder.** A builder that ran `git -C "$W" commit` from a folder on `master` was blocked. Commit from inside the worktree.
+
+**Next.**
+
+The open `lane` issues hold the tasks. List them with step 3 of Start here.
+
+**Waits on the owner.**
+- The design review answers for tickets 90 and 91, and the reviewer contact for ticket 94 (lane 87).
+- **Must a code repo PR close a lane by itself?** (carried from 2026-11-15)
