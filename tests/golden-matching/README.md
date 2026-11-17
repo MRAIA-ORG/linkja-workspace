@@ -1,6 +1,13 @@
 # Golden test of matching: data
 
-`input/hashes_001.csv` and `input/hashes_002.csv` are the decrypted hash files of two sites. They were made from the linkja-test-data patients by the earlier version of `scripts/test-golden-matching.sh`. Site 001 has the first 600 patients. Site 002 has the last 600. Hashing rejected one of the 200 shared patients, so site 002 has 599 rows and 199 patients are at both sites.
+`input/hashes_001.csv` and `input/hashes_002.csv` are the decrypted hash files of two sites. They were made from the 1001 patients in linkja-test-data `hashing/project-data.csv`, with these steps:
+
+1. Site 001 gets the first 600 patients. Site 002 gets the last 600. So 199 patients are at both sites.
+2. Each site uses the sample salt file `hashing/salt.txt`, with its own site ID and name from `salt-engine/sites.csv`. Its private salt is the SHA-256 hex of the sample private salt followed by the site ID.
+3. linkja-hashing hashes each site with the published test secret, `hashing/public-agg.key` and the private date `01/01/2018`.
+4. linkja-matching `--decrypt` decrypts the two hash files with `matching/private-agg.key`. The files are renamed to `hashes_<site ID>.csv`.
+
+Hashing rejected one patient of site 002 that is not at site 001. So site 002 has 599 rows.
 
 `report.txt` and `rules.txt` are the expected output. `GOLDEN_UPDATE=1` writes them again.
 
