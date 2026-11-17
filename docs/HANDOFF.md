@@ -375,7 +375,7 @@ Tickets 99 and 101 merged in linkja-hashing (PRs 8 and 9).
 
 **Traps.**
 - **A real worker failure in a test:** override `newTaskFor` in the test thread pool given through `Engine.createThreadPool`. A throw from `createSecureHash` runs on the run thread, so it does not test the worker path.
-- **`RunnerTest.main_RunFails_ExitsNotZero` starts a separate JVM** with `java.home` and `java.class.path`. It needs the default surefire classpath. A manifest-only jar makes it fail with a class-not-found error.
+- **`RunnerTest.main_RunFails_ExitsNotZero` starts a separate JVM** with `java.home` and `java.class.path`. A change to the surefire fork settings can change that classpath, so run this test after one.
 - **`Runner.java` is also over the module size limit now** (`wc -l src/main/java/org/linkja/hashing/{Engine,Runner}.java` in linkja-hashing).
 
 **Next.**
