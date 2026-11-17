@@ -11,7 +11,7 @@
 #               linkja-test-data side by side. Default: the folder that holds
 #               this workspace repo (the layout of clone-all.sh).
 # The three programs are built from their committed HEAD (git archive), so
-# local edits that are not committed are not tested. linkja-test-data files
+# local edits that are not committed are not tested. The script warns about them. linkja-test-data files
 # are read as they are on disk.
 # GOLDEN_UPDATE=1 writes the expected files from this run, and compares nothing.
 # Needs Java 25, Maven, CMake, OpenSSL 3 and python3. On macOS, set
@@ -32,14 +32,28 @@ fail() { echo "FAIL: $*"; exit 1; }
 # A copy of each program, so the build output and the test secret never land in a clone.
 for repo in linkja-crypto linkja-hashing linkja-matching; do
   mkdir "$work/$repo"
-  git -C "$parent/$repo" archive HEAD | tar -x -C "$work/$repo"
+  git -C "$parent/$repo" archive -o "$work/$repo.tar" HEAD || fail "git archive of $parent/$repo failed"
+  tar -xf "$work/$repo.tar" -C "$work/$repo"
   echo "$repo: $(git -C "$parent/$repo" rev-parse --short HEAD)"
+  [ -z "$(git -C "$parent/$repo" status --porcelain)" ] ||
+    echo "WARNING: $parent/$repo has changes that are not committed. This test does not see them."
 done
 
+# Linkja-hashing writes the rows in input order only when all rows are in one
+# batch. A second batch can finish first and change the row order.
+rows=$(python3 -c 'import csv, sys; print(sum(1 for _ in csv.reader(open(sys.argv[1], newline=""))) - 1)' "$data/hashing/project-data.csv")
+config="$work/linkja-hashing/src/main/resources/config.properties"
+batch=$(sed -n 's/^[[:space:]]*batchSize[[:space:]]*[=:][[:space:]]*//p' "$config" | tr -d '[:space:]')
+[ -n "$batch" ] || fail "batchSize is not set in linkja-hashing config.properties. Set it to $rows or more."
+[ "$batch" -ge "$rows" ] || fail "batchSize $batch in linkja-hashing config.properties is less than the $rows test rows. The row order can change."
+
 # The secret build with the published test secret. CMake writes a random
-# secret only when src/include/linkja_secret.h is not there.
-cp "$data/crypto/secret/linkja_secret.h" "$work/linkja-crypto/src/include/"
-(cd "$work/linkja-crypto" && cmake . -DCMAKE_BUILD_TYPE=Release > /dev/null && make linkjacrypto > /dev/null)
+# secret when src/include/linkja_secret.h is not there, so check it after cmake.
+secret="$data/crypto/secret/linkja_secret.h"
+cp "$secret" "$work/linkja-crypto/src/include/"
+(cd "$work/linkja-crypto" && cmake . -DCMAKE_BUILD_TYPE=Release > /dev/null)
+cmp -s "$secret" "$work/linkja-crypto/src/include/linkja_secret.h" || fail "cmake changed the test secret header"
+(cd "$work/linkja-crypto" && make linkjacrypto > /dev/null)
 lib="$work/linkja-crypto/target"
 
 (cd "$work/linkja-hashing" && mvn -B -q package -DskipTests)
