@@ -26,6 +26,7 @@ jobs:
         run: scripts/test-clone-all-mutations.sh
 
   # Hashing to decrypted output, against the expected files in tests/golden-hashing/.
+  # Then matching on two sites, against the expected files in tests/golden-matching/.
   # The repos are checked out side by side, the layout that clone-all.sh makes.
   golden-hashing:
     runs-on: ubuntu-latest
@@ -67,3 +68,5 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libssl-dev cmake
       - name: Golden test of hashing
         run: linkja-workspace/scripts/test-golden-hashing.sh
+      - name: Golden test of matching
+        run: linkja-workspace/scripts/test-golden-matching.sh

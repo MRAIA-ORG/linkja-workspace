@@ -101,6 +101,21 @@ OPENSSL_ROOT_DIR="$(brew --prefix openssl@3)" linkja-workspace/scripts/test-gold
 
 To change the hash values on purpose, run the same command with `GOLDEN_UPDATE=1` in front. The owner must agree to the change first.
 
+### Golden test of matching
+
+`scripts/test-golden-matching.sh` hashes the linkja-test-data patients as two sites. The first two sites of `salt-engine/sites.csv` share the project salt of the sample salt file. Each site gets a fixed private salt of its own. Site 1 gets the first 600 patients and site 2 the last 600, so 200 patients are at both sites. The script decrypts the two hash files and runs linkja-matching with all match rules. Then it compares two files with the files in `tests/golden-matching/`:
+
+- `report.txt`: the report of linkja-matching, i.e. the Global ID of each row.
+- `rules.txt`: the match count of each match rule, from the console output of linkja-matching.
+
+The report name holds the time of the run, so the script finds the report by the fixed start of its name. The script loads the two sites one after the other, so rows get their Global IDs in the same order on each file system. The `golden-hashing` job in `.github/workflows/ci.yml` runs it after the golden test of hashing. To run it on macOS:
+
+```sh
+OPENSSL_ROOT_DIR="$(brew --prefix openssl@3)" linkja-workspace/scripts/test-golden-matching.sh
+```
+
+To change the matching output on purpose, run the same command with `GOLDEN_UPDATE=1` in front. The owner must agree to the change first.
+
 ### Install the libraries
 
 linkja-core needs the linkja-crypto jar in your local Maven repository (`~/.m2`). Install linkja-crypto first, then linkja-core:
