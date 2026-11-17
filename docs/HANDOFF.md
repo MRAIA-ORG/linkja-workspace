@@ -362,3 +362,27 @@ The open `lane` issues hold the tasks. List them with step 3 of Start here.
 - The design review answers for tickets 90 and 91, and the reviewer contact for ticket 94 (lane 87).
 - **Must a code repo PR close a lane by itself?** (carried from 2026-11-15)
 - Optional: overrule any decision Claude made above.
+
+## 2026-11-16 (evening): a failed hashing run exits non-zero
+
+Tickets 99 and 101 merged in linkja-hashing (PRs 8 and 9).
+
+**What changed.** A hashing run that fails partway now exits 1 with one `ERROR - ` line, and leaves no output files. Before, a mid-run failure returned normally and the run exited 0, so a script took it as a success. A C library that cannot load, on the run thread or in a worker, now gives the line "The crypto C library could not be loaded". The review compared a successful run's files with the code before the change: identical, so the hash output did not change.
+
+**Decisions Claude made, open to the owner's overrule.**
+- An `Error` from a worker thread (e.g. out of memory) prints the same as one from the run thread. The message no longer says "while writing the results".
+- The salt-file error text changed from "decrypt the salt file using the private key" to "could not be read". Check operator documentation that quotes the old text.
+
+**Traps.**
+- **A real worker failure in a test:** override `newTaskFor` in the test thread pool given through `Engine.createThreadPool`. A throw from `createSecureHash` runs on the run thread, so it does not test the worker path.
+- **`RunnerTest.main_RunFails_ExitsNotZero` starts a separate JVM** with `java.home` and `java.class.path`. A change to the surefire fork settings can change that classpath, so run this test after one.
+- **`Runner.java` is also over the module size limit now** (`wc -l src/main/java/org/linkja/hashing/{Engine,Runner}.java` in linkja-hashing).
+
+**Next.**
+
+The open `lane` issues hold the tasks. List them with step 3 of Start here. Lane 87 has no task that can start now: its tasks wait on lane 52 (golden tests) and on the owner.
+
+**Waits on the owner.**
+- The design review answers for tickets 90 and 91, and the reviewer contact for ticket 94 (lane 87).
+- **Must a code repo PR close a lane by itself?** (carried from 2026-11-15)
+- Optional: overrule any decision Claude made above.
