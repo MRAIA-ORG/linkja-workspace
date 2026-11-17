@@ -103,16 +103,18 @@ To change the hash values on purpose, run the same command with `GOLDEN_UPDATE=1
 
 ### Golden test of matching
 
-`scripts/test-golden-matching.sh` hashes the linkja-test-data patients as two sites. The first two sites of `salt-engine/sites.csv` share the project salt of the sample salt file. Each site gets a fixed private salt of its own. Site 1 gets the first 600 patients and site 2 the last 600, so 200 patients are at both sites. The script decrypts the two hash files and runs linkja-matching with all match rules. Then it compares two files with the files in `tests/golden-matching/`:
+`scripts/test-golden-matching.sh` runs linkja-matching with all match rules on the fixed decrypted hash files of two sites in `tests/golden-matching/input/`. It builds only the committed `HEAD` of linkja-matching. The input came from the linkja-test-data patients. Site 001 has the first 600 patients and site 002 the last 600. Hashing rejected one of the 200 shared patients, so 199 patients are at both sites. Six rows of site 002 were edited, so that each of match rules 4, 5, 6, 7, 9 and 10 is the only link of one pair. `tests/golden-matching/README.md` lists them. The script compares two files with the files in `tests/golden-matching/`:
 
 - `report.txt`: the report of linkja-matching, i.e. the Global ID of each row.
 - `rules.txt`: the match count of each match rule, from the console output of linkja-matching.
 
-The report name holds the time of the run, so the script finds the report by the fixed start of its name. The script loads the two sites one after the other, so rows get their Global IDs in the same order on each file system. The `golden-hashing` job in `.github/workflows/ci.yml` runs it after the golden test of hashing. To run it on macOS:
+The report name holds the time of the run, so the script finds the report by the fixed start of its name. The script loads the two sites one after the other, so rows get their Global IDs in the same order on each file system. The `golden-hashing` job in `.github/workflows/ci.yml` runs it after the golden test of hashing. To run it:
 
 ```sh
-OPENSSL_ROOT_DIR="$(brew --prefix openssl@3)" linkja-workspace/scripts/test-golden-matching.sh
+linkja-workspace/scripts/test-golden-matching.sh
 ```
+
+To run it without some match rules, put the rules to keep in `GOLDEN_RULES`, e.g. `GOLDEN_RULES=0,1,2,3,5,6,7,8,9,10,11,12` to remove rule 4. Then `report.txt` must differ for rules 4, 5, 6, 7, 9 and 10. Rule 0 compares each hash column alone. So when one of rules 0, 1, 2, 3, 8, 11 and 12 is removed, the other rules still link the same pairs. For those seven rules, only `rules.txt` shows the missing rule.
 
 To change the matching output on purpose, run the same command with `GOLDEN_UPDATE=1` in front. The owner must agree to the change first.
 
