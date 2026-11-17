@@ -12,7 +12,9 @@
 # edits that are not committed are not tested.
 # GOLDEN_UPDATE=1 writes the expected files from this run, and compares nothing.
 # GOLDEN_RULES=0,1,... runs only these match rules. Use it to check by hand
-# that a missing rule makes the test fail.
+# that a missing rule makes the test fail. It stops with GOLDEN_UPDATE=1, so
+# the expected files always hold every rule.
+# test-golden-matching-mutations.sh proves that these checks can fail.
 # Needs Java 25, Maven and python3.
 set -eu
 
@@ -21,10 +23,24 @@ parent=$(cd "${1:-$(dirname "$(dirname "$here")")}" && pwd)
 expected="$(dirname "$here")/tests/golden-matching"
 # Every match rule that linkja-matching has (GlobalMatchSqlite.matchRule).
 match_rules=${GOLDEN_RULES:-0,1,2,3,4,5,6,7,8,9,10,11,12}
+fail() { echo "FAIL: $*"; exit 1; }
+if [ "${GOLDEN_UPDATE:-}" = 1 ] && [ -n "${GOLDEN_RULES:-}" ]; then
+  fail "GOLDEN_UPDATE=1 with GOLDEN_RULES would write expected files for fewer rules"
+fi
+
+# The site IDs come from the input file names, hashes_<site ID>.csv. Each row
+# must have the same ID in its siteid column, the first column.
+export LC_ALL=C # glob order, so the sites load in the same order everywhere
+set -- "$expected"/input/hashes_*.csv
+[ $# -eq 2 ] || fail "expected two input files in $expected/input, found: $*"
+for f in "$@"; do
+  site=${f##*/hashes_}
+  site=${site%.csv}
+  awk -F, -v s="$site" 'NR > 1 && $1 != s { exit 1 }' "$f" || fail "a row of $f has a siteid other than $site"
+done
+
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
-
-fail() { echo "FAIL: $*"; exit 1; }
 
 # A copy of the program, so the build output never lands in the clone.
 repo=linkja-matching
@@ -38,7 +54,6 @@ matching_jar=$(echo "$work"/$repo/target/*-jar-with-dependencies.jar)
 run="$work/run"
 mkdir -p "$run/data/input" "$run/data/output" "$run/data/processed" "$run/config"
 cp "$expected"/input/hashes_*.csv "$run/data/input/"
-export LC_ALL=C # glob order, so the sites load in the same order everywhere
 
 # Matching needs its database tables and a config folder before it runs.
 python3 - "$work/$repo/src/main/resources/GlobalMatchDDL-v2.txt" "$run/data/matching.db" <<'PY'
@@ -64,9 +79,7 @@ echo "0 | start" > "$run/config/global-match-globalId.txt"
 # One load for each site, in site order. Rows get their database IDs in load
 # order, and Global IDs follow those IDs. One load of both files would take
 # them in directory list order, which differs between file systems.
-# The site IDs come from the input file names, hashes_<site ID>.csv.
-set -- "$expected"/input/hashes_*.csv
-[ $# -eq 2 ] || fail "expected two input files in $expected/input, found: $*"
+# "$@" still holds the input files from the site ID check.
 matching() { java -jar "$matching_jar" --directory "$run" "$@" >> "$work/matching.log"; }
 for f in "$@"; do
   site=${f##*/hashes_}

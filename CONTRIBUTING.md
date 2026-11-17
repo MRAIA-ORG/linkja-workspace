@@ -103,12 +103,12 @@ To change the hash values on purpose, run the same command with `GOLDEN_UPDATE=1
 
 ### Golden test of matching
 
-`scripts/test-golden-matching.sh` runs linkja-matching with all match rules on the fixed decrypted hash files of two sites in `tests/golden-matching/input/`. It builds only the committed `HEAD` of linkja-matching. The input came from the 1001 linkja-test-data patients. Site 001 has the first 600 patients and site 002 the last 600, so 199 patients are at both sites. Six rows of site 002 were edited, so that each of match rules 4, 5, 6, 7, 9 and 10 is the only link of one pair. `tests/golden-matching/README.md` lists them. The script compares two files with the files in `tests/golden-matching/`:
+`scripts/test-golden-matching.sh` runs linkja-matching with all match rules on the fixed decrypted hash files of two sites in `tests/golden-matching/input/`. It builds only the committed `HEAD` of linkja-matching. The input came from the 1001 linkja-test-data patients. Site 001 has the first 600 patients and site 002 the last 600, so 199 patients are at both sites. Six rows of site 002 were edited, so that each of match rules 4, 5, 6, 7, 9 and 10 is the only link of one pair. Six more rows differ from their site 001 partner in some columns, so that a rule that reads the incorrect column changes its count. `tests/golden-matching/README.md` lists all of them. The script compares two files with the files in `tests/golden-matching/`:
 
 - `report.txt`: the report of linkja-matching, i.e. the Global ID of each row.
 - `rules.txt`: the match count of each match rule, from the console output of linkja-matching.
 
-The report name holds the time of the run, so the script finds the report by the fixed start of its name. The script loads the two sites one after the other, so rows get their Global IDs in the same order on each file system. The `golden-hashing` job in `.github/workflows/ci.yml` runs it after the golden test of hashing. To run it:
+The report name holds the time of the run, so the script finds the report by the fixed start of its name. The script loads the two sites one after the other, so rows get their Global IDs in the same order on each file system. It takes the site ID from the file name, `hashes_<site ID>.csv`, and stops when a row has another ID in its `siteid` column. The `golden-matching` job in `.github/workflows/ci.yml` runs it on the `develop` branch of linkja-matching. To run it:
 
 ```sh
 linkja-workspace/scripts/test-golden-matching.sh
@@ -116,7 +116,13 @@ linkja-workspace/scripts/test-golden-matching.sh
 
 To run it without some match rules, put the rules to keep in `GOLDEN_RULES`, e.g. `GOLDEN_RULES=0,1,2,3,5,6,7,8,9,10,11,12` to remove rule 4. Then `report.txt` must differ for rules 4, 5, 6, 7, 9 and 10. Rule 0 compares each hash column alone. So when one of rules 0, 1, 2, 3, 8, 11 and 12 is removed, the other rules still link the same pairs. For those seven rules, only `rules.txt` shows the missing rule.
 
-To change the matching output on purpose, run the same command with `GOLDEN_UPDATE=1` in front. The owner must agree to the change first.
+To change the matching output on purpose, run the same command with `GOLDEN_UPDATE=1` in front. The owner must agree to the change first. The script stops when `GOLDEN_UPDATE=1` comes with `GOLDEN_RULES`, so the expected files always hold every rule.
+
+The `golden-matching` job also applies each mutation in `scripts/golden-matching-mutations.txt` to a copy of `test-golden-matching.sh`. Each mutation removes one check of the script, and the case that the line names must then stop failing. A new check in the script needs a new line there. A full run builds linkja-matching once for the case `fewer_rules` and once for each mutation, so it takes some minutes. To run it:
+
+```sh
+linkja-workspace/scripts/test-golden-matching-mutations.sh
+```
 
 ### Install the libraries
 

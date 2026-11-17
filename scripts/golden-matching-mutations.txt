@@ -1,0 +1,14 @@
+# Recorded mutations of test-golden-matching.sh. test-golden-matching-mutations.sh
+# applies each one to a copy and requires its case to stop failing on that copy.
+# Add a line when a ticket or a review proves that a case must catch that defect.
+# A new check in the script needs a new line here, and a case that kills it.
+# Fields, separated by one tab:
+#   label     what the mutation breaks
+#   perl      a "perl -0pe" expression that changes test-golden-matching.sh.
+#             Use {} as delimiters when the pattern has a "|".
+#   case      the case in test-golden-matching-mutations.sh that must catch it
+#   proof     the ticket or PR that proved the case must catch it
+no cmp of the expected files	s{if ! cmp -s "\$expected/\$f" "\$work/\$f"; then}{if false; then}	fewer_rules	ticket #115
+GOLDEN_RULES ignored	s{\$\{GOLDEN_RULES:-(0,[0-9,]+)\}}{$1}	fewer_rules	ticket #115
+GOLDEN_UPDATE with GOLDEN_RULES not stopped	s{\nif \[ "\$\{GOLDEN_UPDATE:-\}" = 1 \] && \[ -n [^\n]*\n[^\n]*\nfi\n}{\n}	update_fewer_rules	ticket #115
+siteid column not checked	s{\n\s*awk -F, -v s=[^\n]*}{}	siteid_differs	ticket #115

@@ -26,8 +26,8 @@ jobs:
         run: scripts/test-clone-all-mutations.sh
 
   # Hashing to decrypted output, against the expected files in tests/golden-hashing/.
-  # Then matching on two sites, against the expected files in tests/golden-matching/.
-  # The repos are checked out side by side, the layout that clone-all.sh makes.
+  # linkja-matching decrypts the hash file. The repos are checked out side by
+  # side, the layout that clone-all.sh makes.
   golden-hashing:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -68,5 +68,29 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libssl-dev cmake
       - name: Golden test of hashing
         run: linkja-workspace/scripts/test-golden-hashing.sh
+
+  # Matching on two sites, against the expected files in tests/golden-matching/.
+  # Then the recorded mutations of that test script.
+  golden-matching:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: linkja-workspace
+          persist-credentials: false
+      - uses: actions/checkout@v7
+        with:
+          repository: MRAIA-ORG/linkja-matching
+          ref: develop
+          path: linkja-matching
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
       - name: Golden test of matching
         run: linkja-workspace/scripts/test-golden-matching.sh
+      - name: Mutations of the golden matching test
+        run: linkja-workspace/scripts/test-golden-matching-mutations.sh
