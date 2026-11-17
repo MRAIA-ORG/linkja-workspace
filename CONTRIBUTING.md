@@ -91,6 +91,16 @@ A new branch in `test-clone-all-mutations.sh` needs a new entry there, and a cas
 linkja-workspace/scripts/test-runner-mutations.sh
 ```
 
+### Golden test of hashing
+
+`scripts/test-golden-hashing.sh` hashes the linkja-test-data patients with the sample salt file and the published test secret. It decrypts the hash file with linkja-matching. Then it compares the decrypted CSV and the plain header fields of the hash file with the files in `tests/golden-hashing/`. It builds the committed `HEAD` of linkja-crypto, linkja-hashing and linkja-matching from the parent folder. The `golden-hashing` job in `.github/workflows/ci.yml` runs it on the `develop` branch of each program. To run it on macOS:
+
+```sh
+OPENSSL_ROOT_DIR="$(brew --prefix openssl@3)" linkja-workspace/scripts/test-golden-hashing.sh
+```
+
+A change that is meant to change the hash values writes new expected files with `GOLDEN_UPDATE=1` in front of the same command. The owner must agree to the change first.
+
 ### Install the libraries
 
 linkja-core needs the linkja-crypto jar in your local Maven repository (`~/.m2`). Install linkja-crypto first, then linkja-core:

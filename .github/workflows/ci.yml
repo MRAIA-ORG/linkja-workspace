@@ -24,3 +24,46 @@ jobs:
         run: scripts/test-runner-mutations.sh
       - name: Clone test and its mutations
         run: scripts/test-clone-all-mutations.sh
+
+  # Hashing to decrypted output, against the expected files in tests/golden-hashing/.
+  # The repos are checked out side by side, the layout that clone-all.sh makes.
+  golden-hashing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: linkja-workspace
+          persist-credentials: false
+      - uses: actions/checkout@v7
+        with:
+          repository: MRAIA-ORG/linkja-crypto
+          ref: develop
+          path: linkja-crypto
+          persist-credentials: false
+      - uses: actions/checkout@v7
+        with:
+          repository: MRAIA-ORG/linkja-hashing
+          ref: develop
+          path: linkja-hashing
+          persist-credentials: false
+      - uses: actions/checkout@v7
+        with:
+          repository: MRAIA-ORG/linkja-matching
+          ref: develop
+          path: linkja-matching
+          persist-credentials: false
+      - uses: actions/checkout@v7
+        with:
+          repository: MRAIA-ORG/linkja-test-data
+          path: linkja-test-data
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - name: Install OpenSSL 3 and CMake
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev cmake
+      - name: Golden test of hashing
+        run: linkja-workspace/scripts/test-golden-hashing.sh
