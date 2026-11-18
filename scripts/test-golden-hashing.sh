@@ -11,8 +11,9 @@
 #               linkja-test-data side by side. Default: the folder that holds
 #               this workspace repo (the layout of clone-all.sh).
 # The three programs are built from their committed HEAD (git archive), so
-# local edits that are not committed are not tested. The script warns about them. linkja-test-data files
-# are read as they are on disk.
+# local edits that are not committed are not tested. The script warns about
+# them, at the start and again at the end. linkja-test-data files are read as
+# they are on disk.
 # GOLDEN_UPDATE=1 writes the expected files from this run, and compares nothing.
 # Needs Java 25, Maven, CMake, OpenSSL 3 and python3. On macOS, set
 # OPENSSL_ROOT_DIR="$(brew --prefix openssl@3)" for CMake.
@@ -25,7 +26,8 @@ data="$parent/linkja-test-data"
 # A fixed private date, so the hash values do not change from run to run.
 private_date=01/01/2018
 work=$(mktemp -d)
-trap 'rm -rf "$work"' EXIT
+# The warnings show again at the end of every run: PASS, FAIL or GOLDEN_UPDATE=1.
+trap '[ ! -f "$work/warnings" ] || cat "$work/warnings"; rm -rf "$work"' EXIT
 
 fail() { echo "FAIL: $*"; exit 1; }
 
@@ -36,23 +38,37 @@ for repo in linkja-crypto linkja-hashing linkja-matching; do
   tar -xf "$work/$repo.tar" -C "$work/$repo"
   echo "$repo: $(git -C "$parent/$repo" rev-parse --short HEAD)"
   [ -z "$(git -C "$parent/$repo" status --porcelain)" ] ||
-    echo "WARNING: $parent/$repo has changes that are not committed. This test does not see them."
+    echo "WARNING: $parent/$repo has changes that are not committed. This test does not see them." |
+    tee -a "$work/warnings"
 done
 
 # Linkja-hashing writes the rows in input order only when all rows are in one
-# batch. A second batch can finish first and change the row order.
-rows=$(python3 -c 'import csv, sys; print(sum(1 for _ in csv.reader(open(sys.argv[1], newline=""))) - 1)' "$data/hashing/project-data.csv")
+# batch. A second batch can finish first and change the row order. The script
+# reads batchSize with java.util.Properties, as linkja-hashing does.
+rows=$(python3 -c 'import csv, sys; print(sum(1 for _ in csv.reader(open(sys.argv[1], newline=""))) - 1)' \
+  "$data/hashing/project-data.csv")
 config="$work/linkja-hashing/src/main/resources/config.properties"
-batch=$(sed -n 's/^[[:space:]]*batchSize[[:space:]]*[=:][[:space:]]*//p' "$config" | tr -d '[:space:]')
+cat > "$work/BatchSize.java" <<'JAVA'
+void main(String[] args) throws Exception {
+  var props = new java.util.Properties();
+  try (var in = new java.io.FileInputStream(args[0])) { props.load(in); }
+  System.out.println(props.getProperty("batchSize", "").trim());
+}
+JAVA
+batch=$(java "$work/BatchSize.java" "$config") || fail "Java could not read $config"
 [ -n "$batch" ] || fail "batchSize is not set in linkja-hashing config.properties. Set it to $rows or more."
-[ "$batch" -ge "$rows" ] || fail "batchSize $batch in linkja-hashing config.properties is less than the $rows test rows. The row order can change."
+case $batch in *[!0-9]*) fail "batchSize '$batch' in linkja-hashing config.properties is not a number.";; esac
+[ "$batch" -ge "$rows" ] ||
+  fail "batchSize $batch in linkja-hashing config.properties is less than the $rows test rows." \
+    "The row order can change."
 
 # The secret build with the published test secret. CMake writes a random
 # secret when src/include/linkja_secret.h is not there, so check it after cmake.
 secret="$data/crypto/secret/linkja_secret.h"
 cp "$secret" "$work/linkja-crypto/src/include/"
 (cd "$work/linkja-crypto" && cmake . -DCMAKE_BUILD_TYPE=Release > /dev/null)
-cmp -s "$secret" "$work/linkja-crypto/src/include/linkja_secret.h" || fail "cmake changed the test secret header"
+cmp -s "$secret" "$work/linkja-crypto/src/include/linkja_secret.h" ||
+  fail "the secret header after cmake is not the test secret $secret"
 (cd "$work/linkja-crypto" && make linkjacrypto > /dev/null)
 lib="$work/linkja-crypto/target"
 
