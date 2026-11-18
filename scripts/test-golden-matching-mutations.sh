@@ -10,6 +10,8 @@
 #   parent-dir  folder with linkja-matching in it, as for test-golden-matching.sh.
 # Each case that gets past the script's first checks builds and runs
 # linkja-matching, so a full run takes some minutes.
+# GOLDEN_CASE_SECONDS sets the time limit of each case. Default: 600.
+# test-golden-mutations-data.sh holds the recorded cases for this runner.
 set -eu
 
 here=$(cd "$(dirname "$0")" && pwd)
@@ -25,7 +27,9 @@ fewer=0,1,2,3,4,5,6,7,8,9,10,11
 # report.txt changes too.
 no_rule4=0,1,2,3,5,6,7,8,9,10,11,12
 cases="fewer_rules fewer_groups update_fewer_rules siteid_differs"
-cases="$cases siteid_first_row siteid_middle_row siteid_numeric"
+cases="$cases siteid_first_row siteid_middle_row siteid_last_row siteid_numeric"
+# The time limit of each run of the script. A case builds linkja-matching once.
+seconds=${GOLDEN_CASE_SECONDS:-600}
 
 # copy DIR: a copy of the script and its expected files, in the repo layout.
 copy() {
@@ -39,43 +43,49 @@ copy() {
 caught() {
   script="$1/scripts/test-golden-matching.sh"
   status=0
+  vars=
   case $2 in
   fewer_rules)
     want="FAIL: rules.txt differs"
-    GOLDEN_RULES=$fewer sh "$script" "$parent" >"$1/out" 2>&1 </dev/null || status=$?
+    vars=GOLDEN_RULES=$fewer
     ;;
   fewer_groups)
     want="FAIL: report.txt differs"
-    GOLDEN_RULES=$no_rule4 sh "$script" "$parent" >"$1/out" 2>&1 </dev/null || status=$?
+    vars=GOLDEN_RULES=$no_rule4
     ;;
   update_fewer_rules)
     want="FAIL: GOLDEN_UPDATE=1 with GOLDEN_RULES"
-    GOLDEN_UPDATE=1 GOLDEN_RULES=$fewer sh "$script" "$parent" >"$1/out" 2>&1 </dev/null || status=$?
-    # The expected files must stay as they are.
-    diff -r "$(dirname "$here")/tests/golden-matching" "$1/tests/golden-matching" >>"$1/out" 2>&1 || status=0
+    vars="GOLDEN_UPDATE=1 GOLDEN_RULES=$fewer"
     ;;
   siteid_differs)
     want="FAIL: a row of"
     input="$1/tests/golden-matching/input"
     mv "$input/hashes_002.csv" "$input/hashes_003.csv"
-    sh "$script" "$parent" >"$1/out" 2>&1 </dev/null || status=$?
     ;;
-  siteid_first_row | siteid_middle_row)
-    # One row with siteid 003: the first data row, or one in the middle.
+  siteid_first_row | siteid_middle_row | siteid_last_row)
+    # One row with siteid 003: the first data row, one in the middle, or the last.
     want="FAIL: a row of"
-    line=2
-    [ "$2" = siteid_first_row ] || line=300
-    perl -pi -e "s/^002,/003,/ if \$. == $line" "$1/tests/golden-matching/input/hashes_002.csv"
-    sh "$script" "$parent" >"$1/out" 2>&1 </dev/null || status=$?
+    case $2 in
+    siteid_first_row) at='$. == 2' ;;
+    siteid_middle_row) at='$. == 300' ;;
+    siteid_last_row) at=eof ;;
+    esac
+    perl -pi -e "s/^002,/003,/ if $at" "$1/tests/golden-matching/input/hashes_002.csv"
     ;;
   siteid_numeric)
     # The file name says 2, the rows say 002. As numbers they are the same.
     want="FAIL: a row of"
     input="$1/tests/golden-matching/input"
     mv "$input/hashes_002.csv" "$input/hashes_2.csv"
-    sh "$script" "$parent" >"$1/out" 2>&1 </dev/null || status=$?
     ;;
   esac
+  # A case that hangs is stopped after $seconds seconds, and is not caught.
+  # shellcheck disable=SC2086 # vars holds zero or more NAME=VALUE words
+  env $vars perl -e "alarm $seconds; exec @ARGV" -- sh "$script" "$parent" >"$1/out" 2>&1 </dev/null || status=$?
+  if [ "$2" = update_fewer_rules ]; then
+    # The expected files must stay as they are.
+    diff -r "$(dirname "$here")/tests/golden-matching" "$1/tests/golden-matching" >>"$1/out" 2>&1 || status=0
+  fi
   [ "$status" -ne 0 ] && grep -q "^$want" "$1/out"
 }
 

@@ -103,7 +103,7 @@ To change the hash values on purpose, run the same command with `GOLDEN_UPDATE=1
 
 ### Golden test of matching
 
-`scripts/test-golden-matching.sh` runs linkja-matching with all match rules on the fixed decrypted hash files of two sites in `tests/golden-matching/input/`. It builds only the committed `HEAD` of linkja-matching. The input came from the 1001 linkja-test-data patients. Site 001 has the first 600 patients and site 002 the last 600, so 199 patients are at both sites. Six rows of site 002 were edited, so that each of match rules 4, 5, 6, 7, 9 and 10 is the only link of one pair. Six more rows differ from their site 001 partner in some columns, so that a rule that reads the incorrect column changes its count. `tests/golden-matching/README.md` lists all of them. The script compares two files with the files in `tests/golden-matching/`:
+`scripts/test-golden-matching.sh` runs linkja-matching with all match rules on the fixed decrypted hash files of two sites in `tests/golden-matching/input/`. It builds only the committed `HEAD` of linkja-matching. The input came from the 1001 linkja-test-data patients. Site 001 has the first 600 patients and site 002 the last 600, so 199 patients are at both sites. Six rows of site 002 were edited, so that each of match rules 4, 5, 6, 7, 9 and 10 is the only link of one pair. Seven more rows differ from their site 001 partner in some columns, so that a rule that reads the incorrect column changes its count. `tests/golden-matching/README.md` lists all of them. The script compares two files with the files in `tests/golden-matching/`:
 
 - `report.txt`: the report of linkja-matching, i.e. the Global ID of each row.
 - `rules.txt`: the match count of each match rule, from the console output of linkja-matching.
@@ -118,10 +118,17 @@ To run it without some match rules, put the rules to keep in `GOLDEN_RULES`, e.g
 
 To change the matching output on purpose, run the same command with `GOLDEN_UPDATE=1` in front. The owner must agree to the change first. The script stops when `GOLDEN_UPDATE=1` comes with `GOLDEN_RULES`, so the expected files always hold every rule.
 
-The `golden-matching` job also applies each mutation in `scripts/golden-matching-mutations.txt` to a copy of `test-golden-matching.sh`. Each mutation removes one check of the script, and the case that the line names must then stop failing. A new check in the script needs a new line there. A full run builds linkja-matching once for the case `fewer_rules` and once for each mutation, so it takes some minutes. To run it:
+The `golden-matching` job also applies each mutation in `scripts/golden-matching-mutations.txt` to a copy of `test-golden-matching.sh`. Each mutation removes one check of the script, and the case that the line names must then stop failing. A new check in the script needs a new line there. A full run builds linkja-matching once for each of the cases `fewer_rules` and `fewer_groups`, and once for each mutation, so it takes some minutes. Each case stops after 600 seconds, or after `GOLDEN_CASE_SECONDS`. To run it:
 
 ```sh
 linkja-workspace/scripts/test-golden-matching-mutations.sh
+```
+
+The recorded cases for this runner are in `linkja-workspace/scripts/test-golden-mutations-data.sh`. They use a stub of `test-golden-matching.sh`, so they run in seconds. The `linux` job runs them, and the mutation gate for this runner with its entries in `linkja-workspace/scripts/golden-runner-mutations.txt`:
+
+```sh
+linkja-workspace/scripts/test-golden-mutations-data.sh
+linkja-workspace/scripts/test-runner-mutations.sh test-golden-matching-mutations.sh test-golden-mutations-data.sh golden-runner-mutations.txt
 ```
 
 ### Install the libraries
