@@ -16,3 +16,4 @@ report.txt not compared	s{for f in report.txt rules.txt}{for f in rules.txt}	few
 siteid check reads only the first row	s{NR > 1 && }{NR == 2 && }	siteid_middle_row	review of ticket #115
 siteid check skips the first row	s{NR > 1 && }{NR > 2 && }	siteid_first_row	review of ticket #115
 siteid compared as numbers	s{\$1 "" != s}{\$1 != s}	siteid_numeric	review of ticket #115
+siteid check skips the last row	s{NR > 1 && }{NR > 1 && NR < 600 && }	siteid_last_row	review of ticket #115, ticket #120

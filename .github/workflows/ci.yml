@@ -22,6 +22,10 @@ jobs:
         run: scripts/test-mutations-data.sh
       - name: Mutation gate for the runner
         run: scripts/test-runner-mutations.sh
+      - name: Golden matching runner data file checks
+        run: scripts/test-golden-mutations-data.sh
+      - name: Mutation gate for the golden matching runner
+        run: scripts/test-runner-mutations.sh test-golden-matching-mutations.sh test-golden-mutations-data.sh golden-runner-mutations.txt
       - name: Clone test and its mutations
         run: scripts/test-clone-all-mutations.sh
 

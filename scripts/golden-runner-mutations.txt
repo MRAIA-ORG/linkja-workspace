@@ -1,0 +1,17 @@
+# Recorded mutations of test-golden-matching-mutations.sh. test-runner-mutations.sh applies
+# each one to a copy and requires test-golden-mutations-data.sh to exit nonzero on that copy.
+# Add a line when a ticket or a review proves that the data cases must catch that defect.
+# A new branch in the runner needs a new line here.
+# Fields, separated by one tab:
+#   label     what the mutation breaks
+#   perl      a "perl -0pe" expression that changes test-golden-matching-mutations.sh.
+#             Use {} as delimiters when the pattern has a "|".
+#   proof     the ticket or PR that proved the cases must catch it
+survived mutant does not fail the run	s{(echo "SURVIVED: [^\n]*\n)\s*failed=1\n}{$1}	ticket #120
+no proof check	s{\n\s*\[ -n "\$4" \] \|\|[^\n]*}{}	ticket #120
+no known case check	s{\n\s*case " \$cases " in[^\n]*}{}	ticket #120
+no match count check	s{\n\s*\[ "\$matches" -eq 1 \] \|\|[^\n]*}{}	ticket #120
+mutation that changes nothing is run	s{if cmp -s "\$here/test-golden-matching.sh" "\$run/scripts/test-golden-matching.sh"; then}{if false; then}	ticket #120
+no mutations check deleted	s{\n\[ "\$n" -gt 0 \] \|\|[^\n]*}{}	ticket #120
+base run failure ignored	s{\n\[ "\$failed" -eq 0 \] \|\| exit 1\n\nn=0}{\nn=0}	ticket #120
+no time limit for a case	s{perl -e "alarm \$seconds; exec \@ARGV" -- }{}	ticket #120
