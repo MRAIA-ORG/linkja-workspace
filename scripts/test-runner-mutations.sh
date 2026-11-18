@@ -10,6 +10,13 @@
 #   test-golden-matching-mutations.sh test-golden-mutations-data.sh golden-runner-mutations.txt
 set -eu
 
+case $# in
+0 | 3) ;;
+*)
+  echo "usage: $0 [RUNNER CASES MUTATIONS] (no arguments or all three)" >&2
+  exit 2
+  ;;
+esac
 here=$(cd "$(dirname "$0")" && pwd)
 runner=${1:-test-clone-all-mutations.sh}
 data_cases=${2:-test-mutations-data.sh}
