@@ -1,0 +1,15 @@
+# The label-to-layer map of the goal tracker, MRAIA-ORG/linkja-workspace#129.
+# tools/tracker_sync.py reads it. Copied from the yw-workflow goal-tracker
+# skill on 2026-11-18, with the 7 layers the owner approved that day.
+# The script reads only the forms below: tracker: <number>, layers:, and each
+# layer as "slice:<part>": "<title>" in double quotes, indented two spaces.
+# Layers are in time order.
+tracker: 129
+layers:
+  "slice:safety-net": "Layer: Safety net (golden tests, CI)"
+  "slice:run-config": "Layer: Run config (roadmap step 1)"
+  "slice:hash-file": "Layer: Hash file module"
+  "slice:c-library": "Layer: C library on all platforms"
+  "slice:linkage": "Layer: Linkage functions (roadmap steps 2 to 6)"
+  "slice:rollout": "Layer: Cost per day and rollout (step 7, releases)"
+  "slice:tooling": "Layer: Tooling (workspace scripts and docs)"

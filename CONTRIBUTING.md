@@ -139,11 +139,16 @@ Use `-DskipTests` in linkja-core, because its tests do not find the native linkj
 
 ## Tickets
 
-All tickets live in this repo. This includes tickets for code in the other repos. The pinned issue [linkja-workspace#129](https://github.com/MRAIA-ORG/linkja-workspace/issues/129) is the tracker. Its sub-issues are the `lane` issues, and each lane's sub-issues are its tickets. GitHub counts the closed sub-issues, so each lane shows its progress without a manual update.
+All tickets live in this repo. This includes tickets for code in the other repos.
 
-- Make a new ticket as a sub-issue of its lane in one command: `gh issue create --parent <lane> --title "<title>" --body-file <file>`. For a ticket that has no lane yet: `gh issue edit <lane> --add-sub-issue <ticket>`.
-- A new lane becomes a sub-issue of the tracker: `gh issue edit 129 --add-sub-issue <lane>`.
-- A ticket has one lane. To move it: `gh issue edit <ticket> --parent <new lane>`.
+Two issues are pinned:
+
+- The tracker, [linkja-workspace#129](https://github.com/MRAIA-ORG/linkja-workspace/issues/129), shows how far all the work is. Its sub-issues are layers, one per part of the goal, e.g. `Layer: Hash file module`. Each layer's sub-issues are its tickets. Each layer shows a progress bar, which GitHub counts from its closed tickets.
+- The lane in progress. A `lane` issue tells a session what to do next. Its body links to the tracker.
+
+Give each new ticket exactly one `slice:` label, e.g. `gh issue create --label slice:hash-file --title "<title>" --body-file <file>`. `.github/tracker-layers.yml` maps each label to its layer. On each issue event, `.github/workflows/tracker.yml` runs `scripts/tracker_sync.py --sync`. It moves each ticket under the layer of its label, and closes a layer when all its tickets are closed. To run it by hand: `python3 scripts/tracker_sync.py --sync --dry-run`, then without `--dry-run`.
+
+The script is a copy of the yw-workflow `goal-tracker` skill. Its self-check stays in that skill.
 
 ## Branches
 
