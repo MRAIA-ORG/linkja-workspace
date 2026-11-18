@@ -137,6 +137,19 @@ mvn install -DskipTests
 
 Use `-DskipTests` in linkja-core, because its tests do not find the native linkja-crypto library by default (see Known gaps).
 
+## Tickets
+
+All tickets live in this repo. This includes tickets for code in the other repos.
+
+Two issues are pinned:
+
+- The tracker, [linkja-workspace#129](https://github.com/MRAIA-ORG/linkja-workspace/issues/129), shows how far all the work is. Its sub-issues are layers, one per part of the goal, e.g. `Layer: Hash file module`. Each layer's sub-issues are its tickets. Each layer shows a progress bar, which GitHub counts from its closed tickets.
+- The lane in progress. A `lane` issue tells a session what to do next. Its body links to the tracker.
+
+Give each new ticket exactly one `slice:` label, e.g. `gh issue create --label slice:hash-file --title "<title>" --body-file <file>`. `.github/tracker-layers.yml` maps each label to its layer. On each issue event, `.github/workflows/tracker.yml` runs `scripts/tracker_sync.py --sync`. It moves each ticket under the layer of its label, and closes a layer when all its tickets are closed. To run it by hand: `python3 scripts/tracker_sync.py --sync --dry-run`, then without `--dry-run`.
+
+The script is a copy of the yw-workflow `goal-tracker` skill. Its self-check stays in that skill.
+
 ## Branches
 
 Code repos have two long-lived branches:
