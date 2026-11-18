@@ -137,6 +137,14 @@ mvn install -DskipTests
 
 Use `-DskipTests` in linkja-core, because its tests do not find the native linkja-crypto library by default (see Known gaps).
 
+## Tickets
+
+All tickets live in this repo, also tickets for code in the other repos. The pinned issue [linkja-workspace#129](https://github.com/MRAIA-ORG/linkja-workspace/issues/129) is the tracker. Its sub-issues are the `lane` issues, and each lane's sub-issues are its tickets. GitHub counts the closed sub-issues, so each lane shows its progress without a manual update.
+
+- A new ticket becomes a sub-issue of its lane when you make it: `gh issue edit <lane> --add-sub-issue <ticket>`.
+- A new lane becomes a sub-issue of the tracker: `gh issue edit 129 --add-sub-issue <lane>`.
+- A ticket has one lane. To move it: `gh issue edit <ticket> --parent <new lane>`.
+
 ## Branches
 
 Code repos have two long-lived branches:
