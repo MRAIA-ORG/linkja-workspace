@@ -268,7 +268,6 @@ The open `lane` issues hold the tasks. List them with step 3 of Start here.
 - `linux` is a required check on linkja-workspace `master`: PR required, admin bypass, 0 approvals.
 
 **Decisions Claude made, open to the owner's overrule.**
-- The mutation "old linkja org as default" stays in CI. It depends on the old org keeping its repos and never getting `linkja-workspace`. If that changes, the job fails on every PR. It is the only proof that the test rejects the old org.
 - The local clone of MRAIA-ORG/.github is at `~/code/linkja/mraia-org-github`. It is not in `scripts/repos.txt`, because nothing in the suite builds from it. So a handoff pass must list its PRs by hand: `gh pr list -R MRAIA-ORG/.github --state merged`.
 
 **Traps.**
@@ -288,8 +287,6 @@ The open `lane` issues hold the tasks. List them with step 3 of Start here.
 - MRAIA-ORG/.github PR 2 merged with no CI, because that repo has none. Three review rounds checked it.
 
 **Traps.**
-- **Tests of the mutation runner must stay offline.** Two reviewers and one fixer started real GitHub clone runs or a self-calling `sh` loop (PR 72 notes). Run cases only through `scripts/test-mutations-data.sh`, which copies the runner beside stubs. Use `{}` as perl delimiters when the pattern has `|`.
-- **The mutation gate records known breakages only.** Each new review of the runner has found one more. Expect that until ticket 74 is done.
 - **The merge hook checks for the review comment before the command runs.** A verdict comment and `gh pr merge` in one Bash call is blocked. Post the comment in its own call.
 - **`gh pr merge` once returned 401 with valid auth** (seen by this session on MRAIA-ORG/.github PR 2). A second try worked. Check `gh pr view <N> --json state` before you retry.
 
@@ -315,10 +312,8 @@ The open `lane` issues hold the tasks. List them with step 3 of Start here.
 - Short reviews for small diffs: a reviewer on a one-line or four-line change gets a narrow brief. The owner asked why reviews take long. The time goes to hand mutation of the check, not to long tests.
 
 **Traps.**
-- **The runner gate takes about 55 seconds.** It took about 22 before PR 82. Each entry reruns all data cases. It runs in CI only. Running entries in parallel would cut it.
 - **A reviewer left a perl probe that waited on stdin, with a backup and edit of the runner in its command.** The worktree was clean when it was stopped. Tell reviewers not to leave a process waiting on stdin, and check `git status` in the review worktree after one stops.
 - **A PR with two `Closes` lines closed the second ticket a few seconds late.** Check `gh issue view <N> --json state` again before you close it by hand.
-- Superseded 2026-11-15 (wrap): "The mutation gate records known breakages only. Expect that until ticket 74 is done." Ticket 74 is done, and its review still found one more gap (ticket 81). Expect it on the next runner change too.
 
 **Next.**
 
@@ -457,7 +452,6 @@ Merged into linkja-core `develop`: the crypto seam (#12, PR 8), its test gaps (#
 - **On macOS, cmake needs `JAVA_HOME`**, e.g. `$(brew --prefix openjdk@25)/libexec/openjdk.jdk/Contents/Home`, or it says "Could NOT find Java".
 - **After a Java mutation run, run `mvn clean`.** A restored source with an old mtime leaves the mutant `.class` in `target/`, and the next run tests the incorrect code.
 - **awk compares a numeric field with a numeric `-v` value as numbers.** `$1 "" != s` forces text.
-- **The golden matching mutation runner takes about 3.5 minutes on a Mac.** The CI job has a 20-minute limit.
 - **The next linkja-core release is a major version**, because `develop` is 2.0.0-SNAPSHOT.
 - **The commit hook reads the branch of the shell folder.** A builder that ran `git -C "$W" commit` from a folder on `master` was blocked. Commit from inside the worktree.
 

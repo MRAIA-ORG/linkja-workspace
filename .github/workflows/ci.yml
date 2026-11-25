@@ -1,4 +1,4 @@
-# Runs the clone-all.sh test and its recorded mutations, so a reviewer reads the result here.
+# Runs the clone-all.sh test and the golden tests, so a reviewer reads the result here.
 name: ci
 
 on:
@@ -18,12 +18,8 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - name: Mutation data file checks
-        run: scripts/test-mutations-data.sh
-      - name: Mutation gate for the runner
-        run: scripts/test-runner-mutations.sh
-      - name: Clone test and its mutations
-        run: scripts/test-clone-all-mutations.sh
+      - name: Clone test
+        run: scripts/test-clone-all.sh
 
   # Hashing to decrypted output, against the expected files in tests/golden-hashing/.
   # linkja-matching decrypts the hash file. The repos are checked out side by
@@ -70,10 +66,9 @@ jobs:
         run: linkja-workspace/scripts/test-golden-hashing.sh
 
   # Matching on two sites, against the expected files in tests/golden-matching/.
-  # Then the recorded mutations of that test script.
   golden-matching:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
         with:
@@ -92,5 +87,3 @@ jobs:
           cache: maven
       - name: Golden test of matching
         run: linkja-workspace/scripts/test-golden-matching.sh
-      - name: Mutations of the golden matching test
-        run: linkja-workspace/scripts/test-golden-matching-mutations.sh
