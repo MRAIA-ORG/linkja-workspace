@@ -14,7 +14,6 @@
 # GOLDEN_RULES=0,1,... runs only these match rules. Use it to check by hand
 # that a missing rule makes the test fail. It stops with GOLDEN_UPDATE=1, so
 # the expected files always hold every rule.
-# test-golden-matching-mutations.sh proves that these checks can fail.
 # Needs Java 25, Maven and python3.
 set -eu
 

@@ -68,28 +68,9 @@ The repo list is in `scripts/repos.txt`. To check the script itself, run the com
 linkja-workspace/scripts/test-clone-all.sh
 ```
 
-The `linux` job in `.github/workflows/ci.yml` runs this test on each push and pull request to `master`.
-The job also applies each mutation in `scripts/clone-all-mutations.txt` to a copy of `clone-all.sh`. The test must fail on each mutation with its expected text.
-To review a change to these scripts, read the result of that job. To run the same checks on your computer:
+The `linux` job in `.github/workflows/ci.yml` runs this test on each push and pull request to `master`. To review a change to these scripts, read the result of that job.
 
-```sh
-linkja-workspace/scripts/test-clone-all-mutations.sh
-```
-
-Add a mutation only when a ticket or a review proves that the test must catch it. Its last field names that ticket or PR.
-Before a full run, check a new data line in seconds:
-
-```sh
-linkja-workspace/scripts/test-clone-all-mutations.sh --check linkja-workspace/scripts/clone-all-mutations.txt
-```
-
-The recorded cases for the data file and the runner loop are in `linkja-workspace/scripts/test-mutations-data.sh`.
-The mutation gate for the runner itself is `linkja-workspace/scripts/test-runner-mutations.sh`. Its entries are in `linkja-workspace/scripts/runner-mutations.txt`.
-A new branch in `test-clone-all-mutations.sh` needs a new entry there, and a case that kills it.
-
-```sh
-linkja-workspace/scripts/test-runner-mutations.sh
-```
+A check that cannot fail is worth nothing. The mutation gate that proved this by script is retired, so round 1 of a review still asks, for each self-check, whether it can fail.
 
 ### Golden test of hashing
 
@@ -117,12 +98,6 @@ linkja-workspace/scripts/test-golden-matching.sh
 To run it without some match rules, put the rules to keep in `GOLDEN_RULES`, e.g. `GOLDEN_RULES=0,1,2,3,5,6,7,8,9,10,11,12` to remove rule 4. Then `report.txt` must differ for rules 4, 5, 6, 7, 9 and 10. Rule 0 compares each hash column alone. So when one of rules 0, 1, 2, 3, 8, 11 and 12 is removed, the other rules still link the same pairs. For those seven rules, only `rules.txt` shows the missing rule.
 
 To change the matching output on purpose, run the same command with `GOLDEN_UPDATE=1` in front. The owner must agree to the change first. The script stops when `GOLDEN_UPDATE=1` comes with `GOLDEN_RULES`, so the expected files always hold every rule.
-
-The `golden-matching` job also applies each mutation in `scripts/golden-matching-mutations.txt` to a copy of `test-golden-matching.sh`. Each mutation removes one check of the script, and the case that the line names must then stop failing. A new check in the script needs a new line there. A full run builds linkja-matching once for the case `fewer_rules` and once for each mutation, so it takes some minutes. To run it:
-
-```sh
-linkja-workspace/scripts/test-golden-matching-mutations.sh
-```
 
 ### Install the libraries
 
